@@ -160,6 +160,12 @@ streamlit run app.py
 
 หากสคริปต์ถูกบล็อก ให้ใช้ `.\.venv\Scripts\python.exe -m streamlit run app.py`
 
+## เผยแพร่แดชบอร์ดบน GitHub Pages
+
+หน้าเว็บแบบ HTML/JavaScript อยู่ใน `docs/` และ workflow ใน `.github/workflows/pages.yml` จะ deploy เมื่อ push การเปลี่ยนแปลงใน `docs/` ไปที่ `main`.
+ครั้งแรกให้ไปที่ **Settings → Pages** แล้วตั้ง **Source** เป็น **GitHub Actions** จากนั้นดูผลที่แท็บ **Actions**.
+ตัวแอป Streamlit (`app.py`) ใช้รันในเครื่องหรือ deploy แยกบน Streamlit Community Cloud; GitHub Pages ให้บริการหน้าเว็บ static ใน `docs/`.
+
 ## ประมวลผลข้อมูลดิบใหม่ (ไม่บังคับ)
 
 ไฟล์ดิบไม่ได้อยู่ใน repository (ใหญ่ — `afnc_items.csv` 68 MB — และบางชุดไม่ระบุสัญญาอนุญาต)
