@@ -45,12 +45,11 @@
     const plot = plotStart ? w.filter((r) => r.ws >= plotStart) : [];
     const findings = D.analysis.findings;
     const picks = [findings.q1[0], findings.q2[0], findings.q3[0], findings.q1[1], findings.q2[1], findings.q3[1]].filter(Boolean);
-    const html = `<h2 class="sec">ภาพรวม</h2>
+    const html = `<h2 class="sec">ภาพรวม</h2><div class="kpis">${cards}</div>
       <h2 class="sec">คดีหลอกลวง vs ข่าวเท็จ</h2>
       ${APP.card({ id: 'ov_main', title: 'แนวโน้มรายสัปดาห์: คดี ความเสียหาย และสัดส่วนข่าวเท็จ', unit: 'คดี · ล้านบาท · %', period: APP.periodText(plot.map((r) => r.ws)), src: 'ACSC + AFNC', span: true,
         desc: 'สัปดาห์ที่ไม่มีการแถลงเป็นช่องว่าง ไม่ใช่ศูนย์ · สัปดาห์ตัวเลขน่าสงสัยถูกตัดออกจากเส้นคดี/ความเสียหาย · ข่าวปลอมและข่าวบิดเบือนเป็นสัดส่วนของคำตัดสิน AFNC' })}
       <p class="hint">จำนวนคำตัดสิน AFNC สะท้อนเรื่องที่ศูนย์ฯ เลือกตรวจ ไม่ใช่จำนวนข่าวปลอมทั้งหมดในสังคม</p>
-      <div class="kpis">${cards}</div>
       <h2 class="sec">ข้อค้นพบสำคัญ</h2><div class="findings">${picks.map((r) => `<div class="find">${esc(r.headline)}<small class="desc">${esc(r.detail)}<br><i>ข้อควรระวัง: ${esc(r.caution)}</i></small></div>`).join('')}</div>`;
     after.push(() => {
       if (!plot.length) return;
