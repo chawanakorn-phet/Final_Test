@@ -116,7 +116,11 @@
     sidebar.querySelectorAll('#fCountries label').forEach((l) => (l.style.display = l.dataset.name.includes(q) ? '' : 'none'));
   });
 
-  APP.resetFilters = () => { APP.state.f = L.defaultFilters(D.meta); APP.buildSidebar(); APP.refresh(); };
+  APP.resetFilters = () => {
+    APP.state.f=L.defaultFilters(D.meta);
+    ['q1Start','q1End','q1Cats','q1Verdicts','q2From','q2To','q2Z','q3Year','q3Countries','q3AiFrom','q3AiTo'].forEach(k=>delete APP.state[k]);
+    APP.buildSidebar(); APP.refresh();
+  };
 
   // ------------------------------------------------------------------ routing / render
   APP.addTab = (id, label, fn) => { APP.tabs[id] = fn; APP.order.push([id, label]); };
@@ -139,8 +143,26 @@
     const d = e.target.closest('[data-detail]'); if (d) { APP.state.detail = d.dataset.detail; APP.refresh(); return; }
     const g = e.target.closest('[data-gran]'); if (g) { APP.state.gran = g.dataset.gran; APP.refresh(); }
     const s = e.target.closest('[data-set]'); if (s) { const [key, val] = s.dataset.set.split('='); APP.state[key] = val; APP.refresh(); }
+    const local = e.target.closest('[data-local-toggle]');
+    if (local) { const key=local.dataset.localToggle, value=local.dataset.value, values=APP.state[key]||[]; APP.state[key]=toggle(values,value); APP.refresh(); return; }
+    const reset = e.target.closest('[data-local-reset]');
+    if (reset) {
+      const maxYear=+D.meta.date_max.slice(0,4), minYear=Math.max(2020,+D.meta.date_min.slice(0,4));
+      if(reset.dataset.localReset==='q1')Object.assign(APP.state,{q1Start:minYear,q1End:maxYear,q1Cats:D.afnc.cats.slice(),q1Verdicts:['ข่าวปลอม','ข่าวบิดเบือน']});
+      if(reset.dataset.localReset==='q2')Object.assign(APP.state,{q2From:D.meta.acsc_first_week,q2To:D.meta.acsc_last_week,q2Z:3.5});
+      if(reset.dataset.localReset==='q3'){const lastAI=Math.max(...D.aiid.rows.map(r=>+r[1].slice(0,4)));Object.assign(APP.state,{q3Year:Math.max(...D.fotn.map(r=>r.y)),q3Countries:Object.keys(D.meta.asean),q3AiFrom:2015,q3AiTo:lastAI});}
+      APP.refresh(); return;
+    }
   });
-  $('#view').addEventListener('change', (e) => { const t = e.target; if (t.dataset && t.dataset.state) { APP.state[t.dataset.state] = t.value; APP.refresh(); } });
+  $('#view').addEventListener('change', (e) => {
+    const t=e.target; if(!t.dataset||!t.dataset.state)return;
+    const value=t.multiple?[...t.selectedOptions].map(o=>o.value):t.value;
+    APP.state[t.dataset.state]=t.dataset.stateType==='number'?(Array.isArray(value)?value.map(Number):Number(value)):value;
+    if(APP.state.q1Start>APP.state.q1End)APP.state[t.dataset.state==='q1Start'?'q1End':'q1Start']=APP.state[t.dataset.state];
+    if(APP.state.q2From>APP.state.q2To)APP.state[t.dataset.state==='q2From'?'q2To':'q2From']=APP.state[t.dataset.state];
+    if(APP.state.q3AiFrom>APP.state.q3AiTo)APP.state[t.dataset.state==='q3AiFrom'?'q3AiTo':'q3AiFrom']=APP.state[t.dataset.state];
+    APP.refresh();
+  });
   $('#chkNotes').addEventListener('change', (e) => { document.body.classList.toggle('notes-on', e.target.checked); APP.state.notes = e.target.checked; });
   $('#btnReset').addEventListener('click', APP.resetFilters);
   $('#btnDrawer').addEventListener('click', () => document.body.classList.add('drawer'));
