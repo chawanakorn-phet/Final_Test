@@ -8,7 +8,7 @@
   const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   APP.$ = $; APP.esc = esc;
 
-  APP.state = { tab: 'overview', f: L.defaultFilters(D.meta), gran: 'month', notes: false };
+  APP.state = { tab: 'overview', f: L.defaultFilters(D.meta), gran: 'month', notes: false, detail: 'afnc' };
 
   // ------------------------------------------------------------------ small builders
   APP.periodText = (dates) => { const d = dates.filter(Boolean).sort(); return d.length ? `${L.fmtDate(d[0])} → ${L.fmtDate(d[d.length - 1])}` : 'ไม่มีข้อมูลในช่วงที่เลือก'; };
@@ -136,6 +136,7 @@
   });
   $('#view').addEventListener('click', (e) => {
     const k = e.target.closest('[data-kpi]'); if (k && APP.onKpi) return APP.onKpi(k.dataset.kpi);
+    const d = e.target.closest('[data-detail]'); if (d) { APP.state.detail = d.dataset.detail; APP.refresh(); return; }
     const g = e.target.closest('[data-gran]'); if (g) { APP.state.gran = g.dataset.gran; APP.refresh(); }
     const s = e.target.closest('[data-set]'); if (s) { const [key, val] = s.dataset.set.split('='); APP.state[key] = val; APP.refresh(); }
   });

@@ -10,66 +10,45 @@
 
   // ================================================================== 4. Scam analysis
   function damage() {
-    const x = APP.ctx(), f = x.f, wk = x.wk, u = L.usable(wk), after = [], p = [], no = L.whyNot('acsc', f), gran = APP.state.gran;
-    const period = APP.periodText(u.map((w) => w.ws)), periodAll = APP.periodText(wk.filter((w) => w.rep).map((w) => w.ws));
-    const loss = L.sum(u.map((w) => w.loss)), cases = L.sum(u.map((w) => w.cases));
-    const types = new Map(); for (const w of u) if (w.hl) { if (!types.has(w.hl)) types.set(w.hl, { weeks: 0, amt: 0, amtWeeks: 0 }); const t = types.get(w.hl); t.weeks++; if (w.hla) { t.amt += w.hla; t.amtWeeks++; } }
-    const tt = [...types.entries()].sort((a, b) => b[1].weeks - a[1].weeks);
-    p.push(`<h2 class="sec">2.1 ความเสียหายจากมิจฉาชีพ</h2><p class="sec-sub">ตัวเลขรวบรวมจากข่าวแถลงรายสัปดาห์ของ ศตฉอ.ตร. (ไม่ใช่ข้อมูลเปิดของตำรวจ) · เฉพาะคดีที่มีผู้แจ้งความ · ความเสียหายจริงน่าจะสูงกว่านี้</p>${no ? scope('acsc') : ''}
-      <div class="kpis">${kpi({ key: 'loss', label: 'มูลค่าความเสียหายรวม', value: u.length ? `${L.fmtNum(loss / 1e6, 0)} <small>ล้านบาท</small>` : '–', sub: u.length ? `${u.length} สัปดาห์ที่ใช้ได้ · ${period}` : 'ไม่มีข้อมูลคดีในช่วงที่เลือก — ไม่ใช่ความเสียหาย 0' })}
-      ${kpi({ key: 'cases', label: 'จำนวนเหตุการณ์ (คดีที่แจ้ง)', value: u.length ? L.fmtInt(cases) : '–', sub: u.length ? `คดี · ${period}` : 'ไม่มีข้อมูลคดีในช่วงที่เลือก' })}
-      ${kpi({ key: 'lpc', label: 'ความเสียหายต่อคดี', value: cases ? `${L.fmtInt(loss / cases)} <small>บาท</small>` : '–', sub: 'รวมความเสียหาย ÷ รวมคดี' })}
-      <div class="kpi" style="--c:#8B8588;cursor:default"><div class="k-label">จำนวนผู้เสียหาย</div><div class="k-value" style="font-size:1.05rem;white-space:normal">ไม่มีในชุดข้อมูล</div><div class="k-sub">จึงไม่แสดง (คดี ≠ ผู้เสียหาย)</div></div>
-      ${kpi({ key: 'loss', label: 'ประเภทที่เสียหายสูงสุดบ่อยที่สุด', value: tt.length ? `<span style="font-size:1.05rem;white-space:normal">${esc(tt.slice().sort((a, b) => b[1].weeks - a[1].weeks)[0][0])}</span>` : '–', sub: tt.length ? `เป็นอันดับ 1 ${tt[0][1].weeks} สัปดาห์` : 'ไม่มีข้อมูลประเภท' })}</div>`);
-    const per = new Map(); for (const w of u) { const k = L.periodKey(w.ws, gran); if (!per.has(k)) per.set(k, { loss: 0, cases: 0, weeks: 0 }); const q = per.get(k); q.loss += w.loss; q.cases += w.cases; q.weeks++; }
-    const pr = [...per.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1));
-    p.push(`<div class="row-tools">ความละเอียด: <div class="seg">${Object.entries(GRAN).map(([k, v]) => `<button data-gran="${k}" class="${gran === k ? 'on' : ''}">${v}</button>`).join('')}</div></div><div class="grid">`);
-    p.push(APP.card({ id: 'm1', title: `มูลค่าความเสียหาย${GRAN[gran]} และจำนวนคดี`, unit: 'ล้านบาท (แท่ง) / คดี (เส้น)', period, src: 'ACSC', span: true, msg: pr.length ? '' : (no || 'ไม่มีข้อมูลคดีในช่วงที่เลือก (ACSC มีเฉพาะ 9 พ.ย. 2025 – 24 ต.ค. 2026)'),
-      desc: 'รวมเฉพาะสัปดาห์ที่มีการแถลงและไม่ติดป้ายน่าสงสัย · ช่วงที่มีสัปดาห์ไม่ครบจะต่ำกว่าความเป็นจริง (ดูจำนวนสัปดาห์ใน tooltip) · สัปดาห์ที่ไม่มีตัวเลขไม่ถูกนับเป็นศูนย์',
-      insight: pr.length ? (() => { const pk = pr.reduce((a, b) => (b[1].loss > a[1].loss ? b : a)); return `ช่วงที่เสียหายสูงสุด: ${pk[0]} (${L.fmtNum(pk[1].loss / 1e6, 0)} ล้านบาท จาก ${pk[1].weeks} สัปดาห์)`; })() : '' }));
-    after.push(() => pr.length && mount('m1', { legend: { top: 0 }, tooltip: { trigger: 'axis', formatter: (q) => { const r = per.get(q[0].axisValue); return `${q[0].axisValue} (${r.weeks} สัปดาห์)<br>ความเสียหาย ${L.fmtNum(r.loss / 1e6, 0)} ล้านบาท<br>คดี ${L.fmtInt(r.cases)}`; } },
-      xAxis: { type: 'category', data: pr.map((r) => r[0]) }, yAxis: [{ type: 'value', name: 'ล้านบาท' }, { type: 'value', name: 'คดี', splitLine: { show: false } }],
-      series: [{ name: 'ความเสียหาย', type: 'bar', color: C.fake, data: pr.map((r) => r[1].loss / 1e6) }, { name: 'จำนวนคดี', type: 'line', yAxisIndex: 1, color: C.grey, data: pr.map((r) => r[1].cases) }] }));
-    p.push(APP.card({ id: 'm2', title: 'ประเภทการหลอกลวงที่เสียหายสูงสุดของสัปดาห์', unit: 'จำนวนสัปดาห์ที่เป็นอันดับ 1', period, src: 'ACSC', msg: tt.length ? '' : (no || 'ไม่มีข้อมูลประเภท'), desc: 'ป้ายประเภทในไฟล์สะกดต่างกันหลายแบบ จัดกลุ่มเป็น 6 กลุ่ม · ข้อมูลระบุเฉพาะ "ประเภทอันดับ 1" ของแต่ละสัปดาห์',
-      insight: tt.length ? `อันดับ 1: ${tt[0][0]} (${tt[0][1].weeks} สัปดาห์)` : '' }));
-    after.push(() => tt.length && mount('m2', { tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } }, grid: { left: 10, right: 40, top: 20, bottom: 10, containLabel: true }, xAxis: { type: 'value' }, yAxis: { type: 'category', inverse: true, data: tt.map((t) => t[0]) }, series: [{ type: 'bar', color: C.fake, data: tt.map((t) => t[1].weeks), label: { show: true, position: 'right' } }] }));
-    const amt = tt.filter((t) => t[1].amtWeeks).sort((a, b) => b[1].amt - a[1].amt);
-    p.push(APP.card({ id: 'm3', title: 'มูลค่าความเสียหายของประเภทที่สูงสุด (เฉพาะสัปดาห์ที่แถลงยอด)', unit: 'ล้านบาท (ผลรวมเท่าที่มีข้อมูล)', period, src: 'ACSC', msg: amt.length ? '' : (no || 'ไม่มีข้อมูลยอดเงินแยกประเภท'), desc: `ยอดเงินแยกประเภทมีเฉพาะ ${L.sum(amt.map((t) => t[1].amtWeeks))} สัปดาห์ และส่วนใหญ่ปัดเป็นล้านบาท จึงเป็นผลรวมบางส่วน ไม่ใช่ความเสียหายรวมของประเภทนั้น` }));
-    after.push(() => amt.length && mount('m3', { tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } }, grid: { left: 10, right: 40, top: 20, bottom: 10, containLabel: true }, xAxis: { type: 'value' }, yAxis: { type: 'category', inverse: true, data: amt.map((t) => `${t[0]} (${t[1].amtWeeks} สัปดาห์)`) }, series: [{ type: 'bar', color: C.fakeL, data: amt.map((t) => t[1].amt / 1e6), label: { show: true, position: 'right', formatter: (q) => L.fmtNum(q.value, 0) } }] }));
-    p.push('</div>');
-    // weekly trend with cp
-    const cp = D.analysis.cp_lpc, dc = D.analysis.decomp;
-    p.push('<div class="grid" style="margin-top:14px">');
-    p.push(APP.card({ id: 'm4', title: 'ความเสียหายรายสัปดาห์ (สัปดาห์ที่ไม่มีข้อมูล = ช่องว่าง)', unit: 'ล้านบาท/สัปดาห์', period: periodAll, src: 'ACSC', span: true, msg: wk.some((w) => w.rep) ? '' : (no || 'ไม่มีข้อมูล'), desc: 'แถบเทา = ไม่มีการแถลง · แถบแดงอ่อน = ตัวเลขน่าสงสัย (16–22 ส.ค. 2026 รายงาน 79,311 คดี ≈ 13 เท่าของปกติ) ตัดออก · จุดโปร่ง = ตัวเลขปัด' }));
-    after.push(() => { const r = wk.filter((w) => w.rep || w.sus); if (r.length) APP.lossChart('m4', wk.filter((w) => w.ws >= r[0].ws && w.ws <= r[r.length - 1].ws)); });
-    if (dc && cp) {
-      p.push(APP.card({ id: 'm5', title: 'ความเสียหายลดลงเพราะอะไร: จำนวนคดี หรือความเสียหายต่อคดี', unit: 'ล้านบาท/สัปดาห์ (เฉลี่ย 8 สัปดาห์)', period: `ช่วงสูงสุด ${dc.peak_start}→${dc.peak_end} vs ต่ำสุด ${dc.trough_start}→${dc.trough_end} (ทั้งช่วงข้อมูล ไม่เปลี่ยนตามตัวกรอง)`, src: 'ACSC', h: 300,
-        desc: 'ความเสียหาย = จำนวนคดี × ความเสียหายต่อคดี แยกส่วนเปลี่ยนแปลงแบบผลรวมตรงกันพอดี บอกว่า "ส่วนใดเปลี่ยน" ไม่ได้บอกว่า "ทำไม"',
-        insight: `ความเสียหายลด ${L.fmtNum((Math.abs(dc.loss_trough - dc.loss_peak) / dc.loss_peak) * 100, 0)}% — ${L.fmtNum((dc.severity_effect / (dc.loss_trough - dc.loss_peak)) * 100, 0)}% มาจากความเสียหายต่อคดีที่ลดลง` }));
-      after.push(() => mount('m5', { tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, valueFormatter: (q) => L.fmtNum(q, 0) + ' ล้านบาท' }, xAxis: { type: 'category', data: ['ช่วงสูงสุด', 'ผลจากจำนวนคดี', 'ผลจากบาท/คดี', 'ช่วงต่ำสุด'] }, yAxis: { type: 'value', name: 'ล้านบาท' },
-        series: [{ type: 'bar', stack: 'w', itemStyle: { color: 'transparent' }, data: [0, dc.loss_peak / 1e6 + dc.cases_effect / 1e6, dc.loss_trough / 1e6, 0] }, { type: 'bar', stack: 'w', label: { show: true, formatter: (q) => L.fmtNum(q.value, 0) }, data: [{ value: dc.loss_peak / 1e6, itemStyle: { color: C.grey } }, { value: -dc.cases_effect / 1e6, itemStyle: { color: C.fakeL } }, { value: -dc.severity_effect / 1e6, itemStyle: { color: C.fake } }, { value: dc.loss_trough / 1e6, itemStyle: { color: C.grey } }] }] }));
-    }
-    p.push('</div>');
-    // anomalies
-    const an = D.analysis.anomalies.filter((r) => L.timeOK(r.week_start, f) || true);
-    p.push(`<section class="card" style="margin-top:14px"><h3>ช่วงที่ผิดปกติ (ตรวจจากข้อมูลทั้งช่วง)</h3>${table([{ h: 'ชุดข้อมูล', f: (r) => r.series }, { h: 'สัปดาห์', f: (r) => r.week_start }, { h: 'ค่า', n: 1, f: (r) => L.fmtNum(r.value, 1) }, { h: 'ค่าคาดจากสัปดาห์รอบข้าง', n: 1, f: (r) => L.fmtNum(r.expected, 1) }, { h: 'robust z', n: 1, f: (r) => L.fmtNum(r.z, 1) }], an)}
-      <div class="cap">เกณฑ์ |z| > 3.5 เทียบมัธยฐานของ 13 สัปดาห์รอบข้าง · สัปดาห์ 16–22 ส.ค. 2026 (คดี z ≈ ${L.fmtNum((D.analysis.outliers[0] || {}).robust_z, 0)}) ถูกตัดออกก่อนแล้ว · ความผิดปกติทางสถิติไม่ใช่เหตุการณ์จริงเสมอไป · ข่าวเท็จนิ่งเพราะจำนวนคำตัดสินเป็นโควตาของศูนย์ฯ</div></section>`);
-    // detail rows
-    const cols = [{ h: 'สัปดาห์ (อาทิตย์)', f: (w) => w.ws }, { h: 'คดี', n: 1, f: (w) => L.fmtInt(w.cases) }, { h: 'ความเสียหาย (บาท)', n: 1, f: (w) => L.fmtInt(w.loss) }, { h: 'ประเภทอันดับ 1 (คดี)', f: (w) => w.tt || '–' }, { h: 'ประเภทเสียหายสูงสุด', f: (w) => w.hl || '–' },
-      { h: 'สถานะ', f: (w) => (w.sus ? 'น่าสงสัย (ตัดออก)' : !w.rep ? 'ไม่มีการแถลง' : w.rnd ? 'ใช้ได้ (ยอดปัด)' : 'ใช้ได้') }, { h: 'แหล่งที่มา', raw: 1, f: (w) => link(w.url) }];
-    p.push(`<section class="card" style="margin-top:14px"><h3>รายการต้นทาง (ตรวจสอบแหล่งที่มารายสัปดาห์)</h3><div class="row-tools"><button class="btn-ghost" id="dlW">⬇ ดาวน์โหลด CSV</button></div>${table(cols, wk.filter((w) => w.rep).slice().reverse(), { max: 200 })}<div class="cap">หน่วย: คดี/บาท · ช่วงเวลา: ${esc(periodAll)} · แต่ละแถวมีลิงก์ข่าวต้นทาง</div></section>`);
-    after.push(() => { const b = document.getElementById('dlW'); if (b) b.onclick = () => APP.csv('acsc_weekly_filtered.csv', cols.filter((c) => !c.raw).concat([{ h: 'source_url', f: (w) => w.url || '' }]), wk.filter((w) => w.rep)); });
-
-    // ---- 2.2 lag analysis (same analysis as the Streamlit dashboard)
-    p.push('<h2 class="sec">2.2 ประเภทภัยและความสัมพันธ์กับข่าวปลอม</h2>');
-    const lag = D.analysis.lag;
-    p.push(APP.card({ id: 'c2', title: 'ข่าวปลอมนำหน้าหรือตามหลังคดีหลอกลวงหรือไม่ (lag −4…+4 สัปดาห์)', unit: 'สหสัมพันธ์ r ของการเปลี่ยนแปลงรายสัปดาห์', period: 'ทั้งช่วงข้อมูล ACSC (ไม่เปลี่ยนตามตัวกรอง)', src: 'AFNC + ACSC', desc: 'ใช้การเปลี่ยนแปลงสัปดาห์ต่อสัปดาห์เพื่อตัดแนวโน้มร่วม · lag บวก = ข่าวปลอมนำหน้า · แถบเทา = เกณฑ์ ±1.96/√n · ระดับดิบ r = ' + L.fmtNum(D.analysis.detrended.raw, 2) + ' หายไปหลังตัดแนวโน้ม (r = ' + L.fmtNum(D.analysis.detrended.detrended, 2) + ')',
-      insight: `มี ${lag.filter((l) => l.significant).length} จาก ${lag.length} lag ที่เกินเกณฑ์ — ไม่พบหลักฐานว่าข่าวปลอมนำหรือตามหลังคดี (ผลที่ไม่พบ ไม่ใช่การพิสูจน์ว่าไม่มี)` }));
-    after.push(() => mount('c2', { xAxis: { type: 'category', data: lag.map((l) => l.lag), name: 'lag (สัปดาห์)' }, yAxis: { type: 'value', min: -0.6, max: 0.6, name: 'r' }, tooltip: { trigger: 'axis', formatter: (q) => { const l = lag[q[0].dataIndex]; return `lag ${l.lag}<br>r = ${L.fmtNum(l.r, 2)} (n=${l.n}, เกณฑ์ ±${L.fmtNum(l.ci95, 2)})`; } },
-      series: [{ type: 'bar', data: lag.map((l) => ({ value: l.r, itemStyle: { color: l.significant ? C.fake : '#c9c3c5' } })), markArea: { silent: true, itemStyle: { color: 'rgba(150,150,155,.14)' }, data: [[{ yAxis: -lag[0].ci95 }, { yAxis: lag[0].ci95 }]] } }] }));
-    p.push('</div>');
-
-    return { html: p.join(''), after };
+    const x=APP.ctx(), f=x.f, wk=D.weekly.filter(w=>L.timeOK(w.ws,f)), use=wk.filter(w=>w.use), allUse=L.usable(D.weekly), after=[], p=[];
+    const latest=allUse[allUse.length-1], last4=D.weekly.slice(-4), v4=L.sum(last4.map(w=>w.vd)), false4=v4?100*L.sum(last4.map(w=>w.fake+w.dist))/v4:null;
+    const loss= L.sum(use.map(w=>w.loss)), cases=L.sum(use.map(w=>w.cases));
+    const kp=`${kpi({key:'cases',label:`คดีล่าสุด ${latest?.ws||'–'}`,value:latest?L.fmtInt(latest.cases):'–',sub:'เทียบกับค่าเฉลี่ย 4 สัปดาห์ก่อน'})}${kpi({key:'loss',label:'ความเสียหายสัปดาห์ล่าสุด',value:latest?L.fmtMB(latest.loss):'–',sub:latest?.rnd?'ตัวเลขปัดเป็นล้านบาท':'ACSC'})}${kpi({key:'lpc',label:'ความเสียหายต่อคดี (ช่วงที่เลือก)',value:cases?`${L.fmtInt(loss/cases)} บาท`:'–',sub:`${L.fmtInt(cases)} คดี · ${use.length} สัปดาห์ที่ใช้ได้`})}${kpi({key:'fake',label:'สัดส่วนข่าวเท็จ 4 สัปดาห์ล่าสุด',value:false4===null?'–':`${L.fmtNum(false4,1)}%`,sub:'ปลอม + บิดเบือน จากคำตัดสิน AFNC'})}`;
+    p.push(`<h2 class="sec">Q2 ภัยหลอกลวงและความผิดปกติ</h2><p class="sec-sub">ตัวเลข ACSC รวบรวมจากข่าวแถลงรายสัปดาห์ ไม่ใช่ข้อมูลเปิดของตำรวจ · นับเฉพาะคดีที่มีผู้แจ้งความ</p><div class="kpis">${kp}</div>`);
+    const plot=wk.filter(w=>w.ws>=D.meta.acsc_first_week), xdates=plot.map(w=>w.ws);
+    p.push('<h2 class="sec">แนวโน้ม</h2>');
+    p.push(APP.card({id:'q2_main',title:'คดีออนไลน์ · ความเสียหาย · สัดส่วนข่าวเท็จรายสัปดาห์',unit:'คดี / ล้านบาท / %',period:APP.periodText(plot.filter(w=>w.rep).map(w=>w.ws)),src:'ACSC + AFNC',span:true,desc:'ช่องว่างสีเทา = ไม่มีการแถลง (ไม่ใช่ 0) · ตัวเลขน่าสงสัยถูกตัดออก · จุดโปร่ง = ยอดความเสียหายที่ปัดเป็นล้านบาท'}));
+    after.push(()=>{if(!plot.length)return;const colors={scam:C.scam,fake:C.fake};mount('q2_main',{legend:{top:0,data:['คดี','ความเสียหาย (ล้านบาท)','สัดส่วนข่าวเท็จ (%)']},tooltip:{trigger:'axis'},grid:[{left:58,right:20,top:38,height:'25%'},{left:58,right:20,top:'37%',height:'25%'},{left:58,right:20,top:'69%',height:'23%'}],xAxis:[0,1,2].map(i=>({type:'category',gridIndex:i,data:xdates,axisLabel:{show:i===2}})),yAxis:[{type:'value',gridIndex:0,name:'คดี'},{type:'value',gridIndex:1,name:'ล้านบาท'},{type:'value',gridIndex:2,name:'%',min:0,max:100}],series:[{name:'คดี',type:'line',xAxisIndex:0,yAxisIndex:0,data:plot.map(w=>w.use?w.cases:null),color:colors.scam,connectNulls:false,symbolSize:5},{name:'ความเสียหาย (ล้านบาท)',type:'line',xAxisIndex:1,yAxisIndex:1,data:plot.map(w=>w.use?w.loss/1e6:null),color:colors.scam,connectNulls:false,symbolSize:5},{name:'สัดส่วนข่าวเท็จ (%)',type:'line',xAxisIndex:2,yAxisIndex:2,data:plot.map(w=>w.vd?(w.fake+w.dist)/w.vd*100:null),color:colors.fake,connectNulls:false,symbolSize:5}]});});
+    p.push('<h2 class="sec">ความเสียหายเปลี่ยนเพราะอะไร</h2><div class="grid">');
+    const dc=D.analysis.decomp, cpCases=D.analysis.cp_cases, cpLpc=D.analysis.cp_lpc;
+    p.push(APP.card({id:'q2_wf',title:'แยกส่วนการลดลงของความเสียหาย (ล้านบาท/สัปดาห์)',unit:'ล้านบาท/สัปดาห์',period:`${dc.peak_start}–${dc.peak_end} เทียบ ${dc.trough_start}–${dc.trough_end}`,src:'ACSC',desc:'แยกผลจากจำนวนคดีและความเสียหายต่อคดี เป็นการแยกเชิงบัญชี ไม่ใช่สาเหตุ'}));
+    after.push(()=>mount('q2_wf',{tooltip:{trigger:'axis'},xAxis:{type:'category',data:['ช่วงสูงสุด','ผลจากจำนวนคดี','ผลจากบาท/คดี','ช่วงต่ำสุด']},yAxis:{type:'value',name:'ล้านบาท/สัปดาห์'},series:[{type:'bar',data:[{value:dc.loss_peak/1e6,itemStyle:{color:C.grey}},{value:dc.cases_effect/1e6,itemStyle:{color:C.fake}},{value:dc.severity_effect/1e6,itemStyle:{color:C.scam}},{value:dc.loss_trough/1e6,itemStyle:{color:C.grey}}],label:{show:true,position:'top',formatter:q=>L.fmtNum(q.value,0)}}]}));
+    p.push(APP.card({id:'q2_cp',title:'จุดเปลี่ยนของจำนวนคดีและความเสียหายต่อคดี',unit:'คดี / บาทต่อคดี',period:APP.periodText(allUse.map(w=>w.ws)),src:'ACSC',span:true}));
+    after.push(()=>{const d=allUse.map(w=>w.ws);mount('q2_cp',{legend:{top:0},tooltip:{trigger:'axis'},grid:[{left:58,right:20,top:35,height:'28%'},{left:58,right:20,top:'58%',height:'28%'}],xAxis:[0,1].map(i=>({type:'category',gridIndex:i,data:d,axisLabel:{show:i===1}})),yAxis:[{type:'value',gridIndex:0,name:'คดี'},{type:'value',gridIndex:1,name:'บาท/คดี'}],series:[{name:'คดี',type:'line',xAxisIndex:0,yAxisIndex:0,data:allUse.map(w=>w.cases),color:C.scam,markLine:{symbol:'none',data:[{xAxis:cpCases.date,lineStyle:{color:C.orange,type:'dashed'}}]}},{name:'บาท/คดี',type:'line',xAxisIndex:1,yAxisIndex:1,data:allUse.map(w=>w.loss/w.cases),color:C.fake,markLine:{symbol:'none',data:[{xAxis:cpLpc.date,lineStyle:{color:C.orange,type:'dashed'}}]}}]});});
+    const pts=use.filter(w=>w.cases&&w.loss).map(w=>[w.cases,w.loss/1e6,w.ws]);
+    p.push(APP.card({id:'q2_scatter',title:'จำนวนคดี vs ความเสียหายต่อสัปดาห์',unit:'คดี / ล้านบาท',period:APP.periodText(use.map(w=>w.ws)),src:'ACSC',msg:pts.length<5?'ช่วงที่เลือกมีสัปดาห์ที่ใช้ได้น้อยกว่า 5 สัปดาห์':''}));
+    after.push(()=>pts.length>=5&&mount('q2_scatter',{tooltip:{trigger:'item',formatter:q=>`${q.data[2]}<br>${L.fmtInt(q.data[0])} คดี · ${L.fmtNum(q.data[1],0)} ล้านบาท`},xAxis:{type:'value',name:'คดี'},yAxis:{type:'value',name:'ล้านบาท'},series:[{type:'scatter',data:pts.map(q=>({value:q,symbolSize:9,itemStyle:{color:C.scam,opacity:.75}}))}]}));
+    const blocks=D.analysis.blocks;
+    p.push(APP.card({id:'q2_blocks',title:'การเปลี่ยนแปลงต่อบล็อก 4 สัปดาห์',unit:'% เทียบช่วงก่อนหน้า',period:'ทั้งช่วงข้อมูล',src:'ACSC',desc:'แถบสีเหลืองคือช่วงที่จำนวนคดีลด แต่ความเสียหายต่อคดีเพิ่ม'}));
+    after.push(()=>mount('q2_blocks',{legend:{top:0},tooltip:{trigger:'axis'},xAxis:{type:'category',data:blocks.map(r=>r.from)},yAxis:{type:'value',name:'%'},series:[{name:'คดี',type:'bar',data:blocks.map(r=>r.cases_chg_pct),color:C.scam,markArea:{silent:true,itemStyle:{color:'rgba(201,132,29,.18)'},data:blocks.flatMap(r=>r.cases_down_lpc_up?[[{xAxis:r.from},{xAxis:r.from}]]:[])}},{name:'บาท/คดี',type:'bar',data:blocks.map(r=>r.lpc_chg_pct),color:C.fake}]}));
+    p.push('</div><h2 class="sec">ความผิดปกติ</h2>');
+    const anomalies=D.analysis.anomalies.filter(r=>r.week_start>=D.meta.acsc_first_week&&r.week_start<=D.meta.acsc_last_week);
+    const falseShareSeries='สัดส่วนข่าวเท็จ (%)';
+    const falseAnomalies=anomalies.filter(r=>r.series===falseShareSeries);
+    const falseWeeks=wk.filter(w=>w.ws>='2020-01-01'&&w.vd>0);
+    p.push(APP.card({id:'q2_an_share',title:'สัดส่วนข่าวเท็จรายสัปดาห์ — จุดแดง = ผิดปกติ',unit:'%',period:APP.periodText(falseWeeks.map(w=>w.ws)),src:'AFNC',desc:'สัดส่วนข่าวปลอม + ข่าวบิดเบือนในคำตัดสิน AFNC · จุดผิดปกติเทียบกับมัธยฐานของ 13 สัปดาห์รอบข้าง'}));
+    after.push(()=>{const hit=new Map(falseAnomalies.map(r=>[r.week_start,r]));mount('q2_an_share',{tooltip:{trigger:'axis',formatter:q=>{const w=falseWeeks[q[0].dataIndex],a=hit.get(w.ws);return `${w.ws}<br>${L.fmtNum((w.fake+w.dist)/w.vd*100,1)}%${a?`<br>ค่าคาด ${L.fmtNum(a.expected,1)}% · z ${L.fmtNum(a.z,1)}`:''}`}},xAxis:{type:'category',data:falseWeeks.map(w=>w.ws)},yAxis:{type:'value',name:'%',min:0,max:100},dataZoom:[{type:'inside'}],series:[{name:'สัดส่วนข่าวเท็จ',type:'line',data:falseWeeks.map(w=>({value:(w.fake+w.dist)/w.vd*100,symbol:'circle',symbolSize:6})),color:C.fake,connectNulls:false},{name:'ผิดปกติ',type:'scatter',data:falseAnomalies.filter(a=>falseWeeks.some(w=>w.ws===a.week_start)).map(a=>({value:[a.week_start,a.value],symbolSize:12,itemStyle:{color:C.scam,borderColor:'#fff',borderWidth:2}})),color:C.scam}]});});
+    p.push(`<section class="card"><h3>สัปดาห์ผิดปกติ (robust z &gt; 3.5)</h3>${table([{h:'ชุดข้อมูล',f:r=>r.series},{h:'สัปดาห์',f:r=>r.week_start},{h:'ค่า',n:1,f:r=>L.fmtNum(r.value,1)},{h:'ค่าคาดจากสัปดาห์รอบข้าง',n:1,f:r=>L.fmtNum(r.expected,1)},{h:'robust z',n:1,f:r=>L.fmtNum(r.z,1)}],anomalies)}<div class="cap">เทียบกับมัธยฐานของ 13 สัปดาห์รอบข้าง · สัปดาห์ 16 ส.ค. 2026 ที่ถูกตัดออกไม่อยู่ในตารางนี้</div></section>`);
+    p.push('<h2 class="sec">ประเภทภัยและความสัมพันธ์กับข่าวปลอม</h2><div class="grid">');
+    const types=D.analysis.loss_types;
+    p.push(APP.card({id:'q2_types',title:'ประเภทคดีที่เป็นอันดับ 1 ของสัปดาห์',unit:'จำนวนสัปดาห์',period:APP.periodText(use.map(w=>w.ws)),src:'ACSC'}));
+    after.push(()=>mount('q2_types',{grid:{left:15,right:30,top:12,bottom:10,containLabel:true},xAxis:{type:'value'},yAxis:{type:'category',inverse:true,data:types.map(r=>r.scam_type)},series:[{type:'bar',name:'อันดับ 1 ตามคดี',data:types.map(r=>r.weeks_top_by_cases),color:C.fake},{type:'bar',name:'อันดับ 1 ตามความเสียหาย',data:types.map(r=>r.weeks_top_by_loss),color:C.scam}]}));
+    const lag=D.analysis.lag;
+    p.push(APP.card({id:'q2_lag',title:'สัดส่วนข่าวเท็จนำหน้าหรือตามหลังคดีหลอกลวงหรือไม่ (lag −4…+4)',unit:'สหสัมพันธ์ r ของการเปลี่ยนแปลงรายสัปดาห์',period:'ทั้งช่วงข้อมูล',src:'AFNC + ACSC',desc:'lag บวก = ข่าวเท็จนำหน้า · แถบเทาเป็นช่วงเกณฑ์ ±1.96/√n · ความสัมพันธ์ไม่ใช่เหตุและผล'}));
+    after.push(()=>mount('q2_lag',{xAxis:{type:'category',data:lag.map(r=>r.lag),name:'lag (สัปดาห์)'},yAxis:{type:'value',min:-.6,max:.6,name:'r'},series:[{type:'bar',data:lag.map(r=>({value:r.r,itemStyle:{color:r.significant?C.fake:'#CBD5DD'}})),markArea:{silent:true,itemStyle:{color:'rgba(100,120,135,.14)'},data:[[{yAxis:-lag[0].ci95},{yAxis:lag[0].ci95}]]}}]}));
+    p.push('</div><h2 class="sec">ข้อค้นพบ</h2>');
+    const fs=D.analysis.findings.q2||[];p.push(`<div class="findings">${fs.map((r,i)=>`<div class="find"><b>${i+1}.</b> ${esc(r.headline)}<small class="desc">${esc(r.detail)}<br><i>ข้อควรระวัง: ${esc(r.caution)}</i></small></div>`).join('')}</div>`);
+    return {html:p.join(''),after};
   }
 
   // ================================================================== 5. Data Explorer & Sources
@@ -93,18 +72,86 @@
   }
 
   function explorer() {
-    const x = APP.ctx(), f = x.f, id = APP.state.ds || 'afnc', q = (APP.state.q || '').trim().toLowerCase(), after = [], p = [];
-    const ds = datasetRows(id, x), why = L.whyNot(DS[id].key, f);
-    let rows = ds.rows; if (q) rows = rows.filter((r) => ds.text(r).toLowerCase().includes(q));
-    p.push(`<h2 class="sec">4.1 สำรวจข้อมูลต้นทาง</h2><p class="sec-sub">ตารางตามตัวกรองที่เลือก · ค้นหา ดาวน์โหลด CSV และตรวจสอบแหล่งที่มา</p>${why ? scope(DS[id].key) : ''}
-      <div class="row-tools"><select class="sel" data-state="ds">${Object.entries(DS).map(([k, v]) => `<option value="${k}"${k === id ? ' selected' : ''}>${esc(v.name)}</option>`).join('')}</select>
-      <input class="sel" id="exQ" type="search" placeholder="ค้นหา แล้วกด Enter" value="${esc(APP.state.q || '')}" style="min-width:220px"><button class="btn-ghost" id="exDl">⬇ ดาวน์โหลด CSV (${L.fmtInt(rows.length)} แถว)</button></div>
-      ${table(ds.cols, rows, { max: 300 })}`);
-    after.push(() => { const b = document.getElementById('exDl'); if (b) b.onclick = () => APP.csv(`${id}_filtered.csv`, ds.csv, rows); const s = document.getElementById('exQ'); if (s) s.onkeydown = (e) => { if (e.key === 'Enter') { APP.state.q = s.value; APP.refresh(); } }; });
-    const m = D.source_map.find((r) => r[0] === DS[id].map);
-    if (m) p.push(`<div class="note"><b>แหล่งที่มา:</b> ${esc(m[1])} · <code>${esc(m[2])}</code> · ${esc(m[3])}<br><b>วิธีคำนวณ:</b> ${esc(m[4])}</div>`);
-
-    return { html: p.join(''), after };
+    const id=APP.state.detail||'afnc', after=[], p=[], options=[['afnc','ข่าวปลอมไทย'],['scam','คดีหลอกลวง'],['ai','AI & Deepfake'],['freedom','เสรีภาพอินเทอร์เน็ต'],['eu','ข้อมูลเท็จระดับโลก']];
+    p.push(`<h2 class="sec">รายละเอียดแต่ละชุดข้อมูล</h2><div class="row-tools"><div class="seg">${options.map(([k,n])=>`<button data-detail="${k}" class="${id===k?'on':''}">${n}</button>`).join('')}</div></div>`);
+    if(id==='afnc'){
+      const months=new Map(), annual=new Map(), agencies=new Map(), tags=new Map();
+      for(let i=0;i<A.d.length;i++){
+        const y=L.yearOf(A.d[i]), m=A.d[i].slice(0,7), st=A.st[i], cat=A.c[i];
+        if(A.itypes[A.it[i]]==='Verdict'){
+          if(!annual.has(y))annual.set(y,[0,0,0,0]);annual.get(y)[st]++;
+          if(y>=2020&&cat>=0){if(!months.has(m))months.set(m,new Map());const cm=months.get(m);const key=A.cats[cat];if(!cm.has(key))cm.set(key,[0,0]);if(st<2)cm.get(key)[st]++;}
+          if(A.ag[i]>=0){const a=A.agencies[A.ag[i]];agencies.set(a,(agencies.get(a)||0)+1);}
+          for(const tag of String(A.tg[i]||'').split(/[;,|]/).map(t=>t.trim()).filter(Boolean))tags.set(tag,(tags.get(tag)||0)+1);
+        }
+      }
+      const ys=[...annual.keys()].sort((a,b)=>a-b), ms=[...months.keys()].sort(), cats=[...new Set([...months.values()].flatMap(m=>[...m.keys()]))];
+      p.push('<h3>ข่าวปลอมในไทย — ศูนย์ต่อต้านข่าวปลอม (AFNC)</h3><div class="grid">');
+      p.push(APP.card({id:'det_afnc_cat',title:'จำนวนเรื่องรายเดือน แยกตามหมวดข่าว',unit:'เรื่อง/เดือน',period:ms.length?`${ms[0]}–${ms.at(-1)}`:'–',src:'AFNC',span:true}));
+      after.push(()=>ms.length&&mount('det_afnc_cat',{legend:{type:'scroll',top:0},xAxis:{type:'category',data:ms},yAxis:{type:'value',name:'เรื่อง'},dataZoom:[{type:'inside'}],series:cats.map((c,j)=>({name:c,type:'bar',stack:'s',color:[C.scam,C.fake,C.orange,C.warn,C.blue,C.ink,C.other][j%7],data:ms.map(m=>L.sum(months.get(m).get(c)||[0,0]))}))}));
+      p.push(APP.card({id:'det_afnc_mix',title:'สัดส่วนผลคำตัดสินรายปี',unit:'% ของคำตัดสิน',period:ys.length?`${ys[0]}–${ys.at(-1)}`:'–',src:'AFNC'}));
+      after.push(()=>ys.length&&mount('det_afnc_mix',{legend:{top:0},xAxis:{type:'category',data:ys.map(String)},yAxis:{type:'value',min:0,max:100,name:'%'},series:[['ข่าวปลอม',0,C.fake],['ข่าวบิดเบือน',1,C.fakeL],['ข่าวจริง',2,C.global]].map(([n,k,c])=>({name:n,type:'bar',stack:'s',color:c,data:ys.map(y=>{const a=annual.get(y);return L.sum(a.slice(0,3))?a[k]/L.sum(a.slice(0,3))*100:0;})}))}));
+      const top=(m)=>[...m.entries()].sort((a,b)=>b[1]-a[1]).slice(0,12).reverse();const ag=top(agencies),tg=top(tags);
+      p.push(APP.card({id:'det_afnc_ag',title:'หน่วยงานที่ตรวจข้อเท็จจริงบ่อยที่สุด',unit:'จำนวนคำตัดสิน',period:'2019–2026',src:'AFNC'}));
+      after.push(()=>mount('det_afnc_ag',{grid:{left:12,right:30,top:10,bottom:10,containLabel:true},xAxis:{type:'value'},yAxis:{type:'category',data:ag.map(r=>r[0])},series:[{type:'bar',data:ag.map(r=>r[1]),color:C.fake}]}));
+      p.push(APP.card({id:'det_afnc_tag',title:'หัวข้อที่พบบ่อยที่สุด',unit:'จำนวนคำตัดสิน',period:'2019–2026',src:'AFNC'}));
+      after.push(()=>mount('det_afnc_tag',{grid:{left:12,right:30,top:10,bottom:10,containLabel:true},xAxis:{type:'value'},yAxis:{type:'category',data:tg.map(r=>r[0])},series:[{type:'bar',data:tg.map(r=>r[1]),color:C.fake}]}));
+      p.push('</div><div class="note">จำนวนคำตัดสินเป็นเรื่องที่ศูนย์ฯ เลือกตรวจ ไม่ใช่จำนวนข่าวปลอมทั้งหมด · หมวดข่าวเพิ่ม “อาชญากรรมออนไลน์” ในปี 2026</div>');
+    } else if(id==='scam'){
+      const byMonth=new Map();for(const w of D.weekly){const m=w.ws.slice(0,7);if(!byMonth.has(m))byMonth.set(m,{cases:0,loss:0,weeks:0});if(w.use){const r=byMonth.get(m);r.cases+=w.cases;r.loss+=w.loss;r.weeks++;}}
+      const ms=[...byMonth.keys()].sort(), types=D.analysis.loss_types, rows=ms.map(m=>({month:m,...byMonth.get(m)}));
+      p.push('<h3>คดีหลอกลวงออนไลน์ — ศูนย์ต่อต้านการฉ้อโกงออนไลน์ (ACSC)</h3><div class="note">ตัวเลขรวบรวมจากข่าวแถลงรายสัปดาห์ · สัปดาห์ที่ไม่มีข้อมูลไม่ถูกนับเป็นศูนย์ · สัปดาห์ 16–22 ส.ค. 2026 ถูกตัดออกเพราะตัวเลขผิดปกติ</div><div class="grid">');
+      p.push(APP.card({id:'det_scam_month',title:'คดีและความเสียหายเฉลี่ยรายเดือน',unit:'คดี/สัปดาห์ · ล้านบาท/สัปดาห์',period:ms.length?`${ms[0]}–${ms.at(-1)}`:'–',src:'ACSC'}));
+      after.push(()=>mount('det_scam_month',{legend:{top:0},tooltip:{trigger:'axis'},xAxis:{type:'category',data:ms},yAxis:[{type:'value',name:'คดี'},{type:'value',name:'ล้านบาท'}],series:[{name:'คดี/สัปดาห์ (เฉลี่ย)',type:'bar',data:rows.map(r=>r.weeks?r.cases/r.weeks:null),color:C.fake},{name:'ล้านบาท/สัปดาห์ (เฉลี่ย)',type:'line',yAxisIndex:1,data:rows.map(r=>r.weeks?r.loss/r.weeks/1e6:null),color:C.scam}]}));
+      p.push(APP.card({id:'det_scam_types',title:'ประเภทการหลอกลวงที่เสียหายสูงสุดของสัปดาห์',unit:'จำนวนสัปดาห์',period:APP.periodText(D.weekly.filter(w=>w.use).map(w=>w.ws)),src:'ACSC'}));
+      after.push(()=>mount('det_scam_types',{grid:{left:12,right:30,top:10,bottom:10,containLabel:true},xAxis:{type:'value'},yAxis:{type:'category',inverse:true,data:types.map(r=>r.scam_type)},series:[{name:'อันดับ 1 ตามความเสียหาย',type:'bar',data:types.map(r=>r.weeks_top_by_loss),color:C.scam},{name:'อันดับ 1 ตามคดี',type:'bar',data:types.map(r=>r.weeks_top_by_cases),color:C.fake}]}));
+      p.push(`</div><section class="card"><h3>ตารางรายเดือน</h3>${table([{h:'เดือน',f:r=>r.month},{h:'สัปดาห์ที่ใช้ได้',n:1,f:r=>r.weeks},{h:'คดี/สัปดาห์ (เฉลี่ย)',n:1,f:r=>r.weeks?L.fmtInt(r.cases/r.weeks):'–'},{h:'ล้านบาท/สัปดาห์ (เฉลี่ย)',n:1,f:r=>r.weeks?L.fmtNum(r.loss/r.weeks/1e6,0):'–'},{h:'บาท/คดี',n:1,f:r=>r.cases?L.fmtInt(r.loss/r.cases):'–'}],rows.slice().reverse())}</section>`);
+    } else if(id==='ai'){
+      const rows=D.aiid.rows, byYear=new Map(), risks=new Map();for(const r of rows){const y=+r[1].slice(0,4);if(!byYear.has(y))byYear.set(y,[0,0,0]);const q=byYear.get(y);q[0]++;if(r[5])q[1]++;if(r[6])q[2]++;const risk=r[3]>=0?D.aiid.risk[r[3]]:'ยังไม่จัดหมวด';risks.set(risk,(risks.get(risk)||0)+1);}
+      const ys=[...byYear.keys()].filter(y=>y>=2010).sort((a,b)=>a-b), rr=[...risks.entries()].sort((a,b)=>b[1]-a[1]);
+      p.push('<h3>AI Incident Database — AI ก่อปัญหา/ถูกใช้หลอกลวง</h3><div class="grid">');
+      p.push(APP.card({id:'det_ai_year',title:'เหตุการณ์ AI ตามปีเกิดเหตุ',unit:'เหตุการณ์',period:ys.length?`${ys[0]}–${ys.at(-1)}`:'–',src:'AI Incident Database',span:true}));
+      after.push(()=>mount('det_ai_year',{legend:{top:0},xAxis:{type:'category',data:ys.map(String)},yAxis:{type:'value',name:'เหตุการณ์'},dataZoom:[{type:'inside'}],series:[{name:'ทั้งหมด',type:'line',data:ys.map(y=>byYear.get(y)[0]),color:C.ai},{name:'deepfake',type:'line',data:ys.map(y=>byYear.get(y)[1]),color:C.fake},{name:'scam/fraud',type:'line',data:ys.map(y=>byYear.get(y)[2]),color:C.scam}]}));
+      p.push(APP.card({id:'det_ai_risk',title:'เหตุการณ์แยกตาม Risk Domain',unit:'เหตุการณ์',period:`AIID ฉบับ ${D.meta.aiid_snapshot}`,src:'AI Incident Database'}));
+      after.push(()=>mount('det_ai_risk',{grid:{left:12,right:30,top:10,bottom:10,containLabel:true},xAxis:{type:'value'},yAxis:{type:'category',inverse:true,data:rr.slice(0,14).map(r=>r[0])},series:[{type:'bar',data:rr.slice(0,14).map(r=>r[1]),color:C.ai}]}));
+      const g=D.analysis.aiid_growth;
+      p.push(APP.card({id:'det_ai_growth',title:'เหตุการณ์ที่เพิ่มเข้าฐานข้อมูลรายสัปดาห์',unit:'เหตุการณ์ที่บันทึกเพิ่ม',period:g.length?`${g[0].snapshot}–${g.at(-1).snapshot}`:'–',src:'AI Incident Database'}));
+      after.push(()=>mount('det_ai_growth',{tooltip:{trigger:'axis'},xAxis:{type:'category',data:g.map(r=>r.snapshot)},yAxis:{type:'value'},series:[{name:'เพิ่มเข้าฐาน',type:'bar',data:g.map(r=>r.new),color:C.ai},{name:'เหตุเก่าที่เพิ่งบันทึก',type:'line',data:g.map(r=>r.new_with_old_event_date),color:C.fake}]}));
+      const thai=rows.filter(r=>r[7]).sort((a,b)=>b[1].localeCompare(a[1]));
+      p.push(`</div><section class="card"><h3>เหตุการณ์ที่เกี่ยวข้องกับประเทศไทย (รายการตัวอย่าง)</h3>${table([{h:'ID',f:r=>r[0]},{h:'วันที่',f:r=>r[1]},{h:'หัวข้อ',f:r=>r[2]},{h:'Risk Domain',f:r=>r[3]>=0?D.aiid.risk[r[3]]:'ยังไม่จัดหมวด'},{h:'deepfake',f:r=>r[5]?'✓':''},{h:'scam/fraud',f:r=>r[6]?'✓':''},{h:'ข่าว',n:1,f:r=>r[8]}],thai,{max:100})}<div class="cap">ค้นจากคำว่า Thai/Thailand ในชื่อ/คำอธิบาย เป็นรายการตัวอย่าง ไม่ใช่สัดส่วนจริง</div></section>`);
+    } else if(id==='freedom'){
+      const y=Math.max(...D.fotn.map(r=>r.y)), fr=D.fotn.filter(r=>r.y===y), th=fr.find(r=>r.iso3==='THA'), thAll=D.fotn.filter(r=>r.iso3==='THA').sort((a,b)=>a.y-b.y);
+      const asean=D.fotn.filter(r=>r.y===y&&Object.keys(D.meta.asean).includes(r.iso3)).sort((a,b)=>a.total-b.total);
+      p.push('<h3>Freedom on the Net — เสรีภาพอินเทอร์เน็ต</h3>');
+      if(th)p.push(`<div class="kpis">${kpi({key:'f_score',label:`คะแนนไทย ปีข้อมูล ${y}`,value:`${th.total}/100`,sub:['','เสรี','เสรีบางส่วน','ไม่เสรี'][th.st],color:C.freedom})}${kpi({key:'f_rank',label:'อันดับ',value:`${L.fotnRank(D.fotn,'THA',y).rank} จาก ${L.fotnRank(D.fotn,'THA',y).n}`,sub:'1 = เสรีที่สุด',color:C.freedom})}${kpi({key:'f_chg',label:'เปลี่ยนใน 5 ปี',value:`${thAll.at(-1).total-thAll.find(r=>r.y===y-5)?.total||0} คะแนน`,sub:'คะแนนสูง = เสรีมาก',color:C.freedom})}</div>`);
+      p.push('<div class="grid">');
+      p.push(APP.card({id:'det_fo_asean',title:'คะแนนเสรีภาพอินเทอร์เน็ต ไทยเทียบอาเซียน',unit:'คะแนน 0–100',period:`ปีข้อมูล ${y}`,src:'Freedom on the Net'}));
+      after.push(()=>{const ids=Object.keys(D.meta.asean);const yrs=[...new Set(D.fotn.map(r=>r.y))].sort((a,b)=>a-b);mount('det_fo_asean',{legend:{type:'scroll',top:0},xAxis:{type:'category',data:yrs.map(String)},yAxis:{type:'value',min:0,max:100},series:ids.map((iso,j)=>({name:D.meta.asean[iso],type:'line',connectNulls:false,color:iso==='THA'?C.freedom:'#B9B6AE',lineStyle:{width:iso==='THA'?3:1.2},data:yrs.map(yy=>D.fotn.find(r=>r.iso3===iso&&r.y===yy)?.total??null)}))});});
+      p.push(APP.card({id:'det_fo_comp',title:`ไทย ปี ${y}: 3 ส่วนของคะแนน`,unit:'% ของคะแนนเต็ม',period:`ปีข้อมูล ${y}`,src:'Freedom on the Net'}));
+      after.push(()=>th&&mount('det_fo_comp',{grid:{left:12,right:40,top:10,bottom:10,containLabel:true},xAxis:{type:'value',max:100},yAxis:{type:'category',data:['สิทธิผู้ใช้','การจำกัดเนื้อหา','อุปสรรคการเข้าถึง']},series:[{type:'bar',data:[{value:th.rig/40*100,label:`${th.rig}/40`},{value:th.con/35*100,label:`${th.con}/35`},{value:th.acc/25*100,label:`${th.acc}/25`}],color:C.freedom,label:{show:true,position:'right',formatter:q=>q.data.label}}]}));
+      const y0=y-5, changes=[];
+      for(const r of fr){const old=D.fotn.find(q=>q.iso3===r.iso3&&q.y===y0);if(old)changes.push({country:r.country,iso3:r.iso3,change:r.total-old.total});}
+      const changeEnds=changes.length>16?[...changes.slice().sort((a,b)=>a.change-b.change).slice(0,8),...changes.slice().sort((a,b)=>b.change-a.change).slice(0,8)].sort((a,b)=>a.change-b.change):changes.sort((a,b)=>a.change-b.change);
+      p.push(APP.card({id:'det_fo_change',title:`ประเทศที่คะแนนเปลี่ยนมากที่สุด (${y0}–${y})`,unit:'คะแนน',period:`เปรียบเทียบปีข้อมูล ${y0} กับ ${y}`,src:'Freedom on the Net'}));
+      after.push(()=>changeEnds.length&&mount('det_fo_change',{grid:{left:15,right:38,top:12,bottom:10,containLabel:true},xAxis:{type:'value',name:'เปลี่ยน (คะแนน)'},yAxis:{type:'category',inverse:true,data:changeEnds.map(r=>r.country)},series:[{type:'bar',data:changeEnds.map(r=>({value:r.change,itemStyle:{color:r.iso3==='THA'?C.scam:r.change<0?C.scam:C.global}})),label:{show:true,position:'right',formatter:q=>`${q.value>0?'+':''}${q.value}`}}]}));
+      p.push(APP.card({id:'det_fo_map',title:`คะแนนอินเทอร์เน็ตรายประเทศ (${y})`,unit:'คะแนน 0–100',period:`ปีข้อมูล ${y}`,src:'Freedom on the Net',span:true}));
+      after.push(()=>{if(!window.echarts.getMap('world'))return;mount('det_fo_map',{visualMap:{min:0,max:100,left:'center',bottom:4,orient:'horizontal',inRange:{color:['#D9E8F0','#A8DAD6','#0F766E']}},tooltip:{trigger:'item',formatter:q=>q.value===undefined?`${q.name}<br>ไม่มีข้อมูล`:`${q.name}: ${q.value}`},series:[{type:'map',map:'world',roam:true,data:fr.map(r=>({name:r.country,value:r.total}))}]});});
+      p.push('</div><div class="note">ปีข้อมูลต่างจากปีรายงาน 1 ปี · คะแนนเป็นการประเมินของผู้เชี่ยวชาญ ไม่ใช่การนับเหตุการณ์</div>');
+    } else {
+      const eu=D.eu, years=new Map(), kw=new Map();for(let i=0;i<eu.d.length;i++){const y=L.yearOf(eu.d[i]);years.set(y,(years.get(y)||0)+1);for(const k of eu.k[i])kw.set(eu.kw[k],(kw.get(eu.kw[k])||0)+1);}
+      const ys=[...years.keys()].sort((a,b)=>a-b), kws=[...kw.entries()].sort((a,b)=>b[1]-a[1]).slice(0,15).reverse(), dm=D.analysis.eu_domains, lg=D.analysis.eu_languages;
+      p.push('<h3>EUvsDisinfo — ข้อมูลเท็จฝั่งสนับสนุนรัสเซีย (กรณีศึกษาเปรียบเทียบ)</h3><div class="note">ชุดข้อมูลนี้เก็บเฉพาะข้อมูลเท็จฝั่งสนับสนุนรัสเซีย จึงใช้สรุปว่าฝ่ายใดปล่อยข่าวเท็จมากกว่าไม่ได้</div><div class="grid">');
+      p.push(APP.card({id:'det_eu_year',title:'จำนวนการหักล้างรายปี',unit:'การหักล้างที่ไม่ซ้ำ',period:ys.length?`${ys[0]}–${ys.at(-1)}`:'–',src:'EUvsDisinfo'}));
+      after.push(()=>ys.length&&mount('det_eu_year',{xAxis:{type:'category',data:ys.map(String)},yAxis:{type:'value',name:'เรื่อง'},series:[{type:'bar',data:ys.map(y=>years.get(y)),color:C.global}]}));
+      p.push(APP.card({id:'det_eu_kw',title:'ประเด็น/เรื่องเล่าที่พบบ่อย',unit:'จำนวนการหักล้าง',period:APP.periodText(eu.d),src:'EUvsDisinfo'}));
+      after.push(()=>mount('det_eu_kw',{grid:{left:12,right:30,top:10,bottom:10,containLabel:true},xAxis:{type:'value'},yAxis:{type:'category',data:kws.map(r=>r[0])},series:[{type:'bar',data:kws.map(r=>r[1]),color:C.global}]}));
+      p.push(APP.card({id:'det_eu_domain',title:'โดเมนบทความที่พบบ่อย',unit:'บทความ',period:APP.periodText(eu.d),src:'EUvsDisinfo'}));
+      after.push(()=>mount('det_eu_domain',{grid:{left:12,right:30,top:10,bottom:10,containLabel:true},xAxis:{type:'value'},yAxis:{type:'category',data:dm.map(r=>r.domain)},series:[{type:'bar',data:dm.map(r=>r.articles),color:C.global}]}));
+      p.push(APP.card({id:'det_eu_lang',title:'ภาษาของบทความ',unit:'บทความ',period:APP.periodText(eu.d),src:'EUvsDisinfo'}));
+      after.push(()=>mount('det_eu_lang',{grid:{left:12,right:30,top:10,bottom:10,containLabel:true},xAxis:{type:'value'},yAxis:{type:'category',data:lg.map(r=>r.language)},series:[{type:'bar',data:lg.map(r=>r.articles),color:C.global}]}));
+      p.push('</div>');
+    }
+    return {html:p.join(''),after};
   }
 
   function quality() {
