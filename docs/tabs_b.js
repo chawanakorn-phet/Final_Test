@@ -19,7 +19,7 @@
     const loss = L.sum(u.map((w) => w.loss)), cases = L.sum(u.map((w) => w.cases));
     const types = new Map(); for (const w of u) if (w.hl) { if (!types.has(w.hl)) types.set(w.hl, { weeks: 0, amt: 0, amtWeeks: 0 }); const t = types.get(w.hl); t.weeks++; if (w.hla) { t.amt += w.hla; t.amtWeeks++; } }
     const tt = [...types.entries()].sort((a, b) => b[1].weeks - a[1].weeks);
-    p.push(`<h2 class="sec">4.1 ความเสียหายจากมิจฉาชีพ</h2><p class="sec-sub">ตัวเลขรวบรวมจากข่าวแถลงรายสัปดาห์ของ ศตฉอ.ตร. (ไม่ใช่ข้อมูลเปิดของตำรวจ) · เฉพาะคดีที่มีผู้แจ้งความ · ความเสียหายจริงน่าจะสูงกว่านี้</p>${no ? scope('acsc') : ''}
+    p.push(`<h2 class="sec">2.1 ความเสียหายจากมิจฉาชีพ</h2><p class="sec-sub">ตัวเลขรวบรวมจากข่าวแถลงรายสัปดาห์ของ ศตฉอ.ตร. (ไม่ใช่ข้อมูลเปิดของตำรวจ) · เฉพาะคดีที่มีผู้แจ้งความ · ความเสียหายจริงน่าจะสูงกว่านี้</p>${no ? scope('acsc') : ''}
       <div class="kpis">${kpi({ key: 'loss', label: 'มูลค่าความเสียหายรวม', value: u.length ? `${L.fmtNum(loss / 1e6, 0)} <small>ล้านบาท</small>` : '–', sub: u.length ? `${u.length} สัปดาห์ที่ใช้ได้ · ${period}` : 'ไม่มีข้อมูลคดีในช่วงที่เลือก — ไม่ใช่ความเสียหาย 0' })}
       ${kpi({ key: 'cases', label: 'จำนวนเหตุการณ์ (คดีที่แจ้ง)', value: u.length ? L.fmtInt(cases) : '–', sub: u.length ? `คดี · ${period}` : 'ไม่มีข้อมูลคดีในช่วงที่เลือก' })}
       ${kpi({ key: 'lpc', label: 'ความเสียหายต่อคดี', value: cases ? `${L.fmtInt(loss / cases)} <small>บาท</small>` : '–', sub: 'รวมความเสียหาย ÷ รวมคดี' })}
@@ -64,8 +64,8 @@
     p.push(`<section class="card" style="margin-top:14px"><h3>รายการต้นทาง (ตรวจสอบแหล่งที่มารายสัปดาห์)</h3><div class="row-tools"><button class="btn-ghost" id="dlW">⬇ ดาวน์โหลด CSV</button></div>${table(cols, wk.filter((w) => w.rep).slice().reverse(), { max: 200 })}<div class="cap">หน่วย: คดี/บาท · ช่วงเวลา: ${esc(periodAll)} · แต่ละแถวมีลิงก์ข่าวต้นทาง</div></section>`);
     after.push(() => { const b = document.getElementById('dlW'); if (b) b.onclick = () => APP.csv('acsc_weekly_filtered.csv', cols.filter((c) => !c.raw).concat([{ h: 'source_url', f: (w) => w.url || '' }]), wk.filter((w) => w.rep)); });
 
-    // ---- 4.2 correlation
-    p.push('<h2 class="sec">4.2 ความสัมพันธ์ทางสถิติ (Correlation)</h2><p class="sec-sub">Spearman (ไม่สมมติการกระจายแบบปกติ) · two-sided p-value · ต้องมีอย่างน้อย 10 คู่ข้อมูล · คำนวณใหม่จากสัปดาห์ที่ใช้ได้ตามตัวกรอง</p>');
+    // ---- 2.2 correlation
+    p.push('<h2 class="sec">2.2 ความสัมพันธ์ทางสถิติ (Correlation)</h2><p class="sec-sub">Spearman (ไม่สมมติการกระจายแบบปกติ) · two-sided p-value · ต้องมีอย่างน้อย 10 คู่ข้อมูล · คำนวณใหม่จากสัปดาห์ที่ใช้ได้ตามตัวกรอง</p>');
     const keys = Object.keys(VARS), vals = Object.fromEntries(keys.map((k) => [k, u.map((w) => VARS[k][1](w))]));
     const rows = []; for (let i = 0; i < keys.length; i++) for (let j = i + 1; j < keys.length; j++) { const r = L.correlate(vals[keys[i]], vals[keys[j]], 'spearman', 10); rows.push({ a: VARS[keys[i]][0], b: VARS[keys[j]][0], r }); }
     p.push(`<section class="card"><h3>ตารางสหสัมพันธ์ (Spearman) ระหว่างตัวชี้วัดรายสัปดาห์</h3>${table([{ h: 'ตัวแปร X', f: (r) => r.a }, { h: 'ตัวแปร Y', f: (r) => r.b }, { h: 'n', n: 1, f: (r) => r.r.n }, { h: 'r', n: 1, f: (r) => (r.r.ok ? L.fmtNum(r.r.r, 2) : '–') }, { h: 'p-value', n: 1, f: (r) => (r.r.ok ? (r.r.p < 0.001 ? r.r.p.toExponential(1) : L.fmtNum(r.r.p, 3)) : '–') },
@@ -90,8 +90,8 @@
     p.push(`<section class="card" style="margin-top:14px"><h3>เสรีภาพอินเทอร์เน็ต ↔ ข่าวปลอม/ความเสียหาย: ทำได้หรือไม่</h3>${table([{ h: 'คู่ข้อมูล', f: (r) => r.pair }, { h: 'เชื่อมได้', f: (r) => (r.ok ? 'ได้' : 'ไม่ได้') }, { h: 'เชื่อมด้วยอะไร', f: (r) => r.how }, { h: 'ข้อจำกัด', f: (r) => r.limit }], D.linkage)}
       <div class="warn">ระบบไม่คำนวณ Scatter/สหสัมพันธ์ระหว่างเสรีภาพกับข่าวปลอมหรือความเสียหายเมื่อข้อมูลเชื่อมกันไม่ได้อย่างสมเหตุสมผล (ดูแท็บ 3 ส่วน 3.3 สำหรับผลที่ทดสอบแล้วและข้อความ "ไม่มีข้อมูลเพียงพอ")</div></section>`);
 
-    // ---- 4.3 forecast
-    p.push('<h2 class="sec">4.3 แนวโน้มและการพยากรณ์ (Forecast)</h2><p class="sec-sub">เปรียบเทียบ 5 แบบจำลอง (Naive, Moving average, Exponential smoothing, Holt damped trend, ARIMA(1,1,1)) ด้วย rolling-origin back-test แล้วเลือก RMSE ต่ำสุด · ค่าพยากรณ์แยกจากข้อมูลจริงด้วยเส้นประและแถบสี · ไม่เปลี่ยนตามตัวกรอง</p>');
+    // ---- 2.3 forecast
+    p.push('<h2 class="sec">2.3 แนวโน้มและการพยากรณ์ (Forecast)</h2><p class="sec-sub">เปรียบเทียบ 5 แบบจำลอง (Naive, Moving average, Exponential smoothing, Holt damped trend, ARIMA(1,1,1)) ด้วย rolling-origin back-test แล้วเลือก RMSE ต่ำสุด · ค่าพยากรณ์แยกจากข้อมูลจริงด้วยเส้นประและแถบสี · ไม่เปลี่ยนตามตัวกรอง</p>');
     const key = APP.state.fc || 'fake_monthly', fc = D.forecast[key];
     p.push(`<div class="row-tools"><div class="seg"><button data-set="fc=fake_monthly" class="${key === 'fake_monthly' ? 'on' : ''}">จำนวนข่าวเท็จรายเดือน</button><button data-set="fc=scam_weekly" class="${key === 'scam_weekly' ? 'on' : ''}">ความเสียหายรายสัปดาห์</button></div></div>`);
     if (!fc.ok) p.push(`<div class="warn">${esc(fc.reason)}</div>`);
@@ -141,7 +141,7 @@
     const x = APP.ctx(), f = x.f, id = APP.state.ds || 'afnc', q = (APP.state.q || '').trim().toLowerCase(), after = [], p = [];
     const ds = datasetRows(id, x), why = L.whyNot(DS[id].key, f);
     let rows = ds.rows; if (q) rows = rows.filter((r) => ds.text(r).toLowerCase().includes(q));
-    p.push(`<h2 class="sec">5.1 สำรวจข้อมูลต้นทาง</h2><p class="sec-sub">ตารางตามตัวกรองที่เลือก · ค้นหา ดาวน์โหลด CSV และตรวจสอบแหล่งที่มา</p>${why ? scope(DS[id].key) : ''}
+    p.push(`<h2 class="sec">4.1 สำรวจข้อมูลต้นทาง</h2><p class="sec-sub">ตารางตามตัวกรองที่เลือก · ค้นหา ดาวน์โหลด CSV และตรวจสอบแหล่งที่มา</p>${why ? scope(DS[id].key) : ''}
       <div class="row-tools"><select class="sel" data-state="ds">${Object.entries(DS).map(([k, v]) => `<option value="${k}"${k === id ? ' selected' : ''}>${esc(v.name)}</option>`).join('')}</select>
       <input class="sel" id="exQ" type="search" placeholder="ค้นหา แล้วกด Enter" value="${esc(APP.state.q || '')}" style="min-width:220px"><button class="btn-ghost" id="exDl">⬇ ดาวน์โหลด CSV (${L.fmtInt(rows.length)} แถว)</button></div>
       ${table(ds.cols, rows, { max: 300 })}`);
@@ -149,19 +149,27 @@
     const m = D.source_map.find((r) => r[0] === DS[id].map);
     if (m) p.push(`<div class="note"><b>แหล่งที่มา:</b> ${esc(m[1])} · <code>${esc(m[2])}</code> · ${esc(m[3])}<br><b>วิธีคำนวณ:</b> ${esc(m[4])}</div>`);
 
-    p.push('<h2 class="sec">5.2 ตรวจสอบข้อมูลก่อนวิเคราะห์ (Inventory)</h2><p class="sec-sub">โครงสร้าง จำนวนแถว/คอลัมน์ ช่วงเวลา ค่าที่หายไป ค่าซ้ำ และความสามารถในการเชื่อมโยงข้ามชุดข้อมูล</p>');
+    p.push('<h2 class="sec">4.2 ตรวจสอบข้อมูลก่อนวิเคราะห์ (Inventory)</h2><p class="sec-sub">โครงสร้าง จำนวนแถว/คอลัมน์ ช่วงเวลา ค่าที่หายไป ค่าซ้ำ และความสามารถในการเชื่อมโยงข้ามชุดข้อมูล</p>');
     p.push(`<section class="card">${table([{ h: 'ชุดข้อมูล', f: (r) => r.dataset }, { h: 'ไฟล์', f: (r) => r.files }, { h: '1 แถว =', f: (r) => r.grain }, { h: 'แถว', n: 1, f: (r) => L.fmtInt(r.rows) }, { h: 'คอลัมน์ต้นทาง', n: 1, f: (r) => r.cols }, { h: 'เริ่ม', f: (r) => L.fmtDate(r.from) }, { h: 'สิ้นสุด', f: (r) => L.fmtDate(r.to) }, { h: 'ค่าว่าง (%)', n: 1, f: (r) => L.fmtNum(r.missing_pct, 1) }, { h: 'ข้อสังเกต', f: (r) => r.note }], D.inventory)}
       <div class="cap">ค่าว่าง = ค่าเฉลี่ยของคอลัมน์สำคัญ (ไม่ใช่ทุกคอลัมน์) · สัปดาห์ที่ไม่มีข้อมูลคดีไม่ถูกเติมเป็น 0</div></section>`);
     p.push(`<section class="card" style="margin-top:14px"><h3>ช่วงเวลาตรงกันหรือไม่ และเชื่อมโยงข้ามชุดได้จริงหรือไม่</h3>${table([{ h: 'คู่ข้อมูล', f: (r) => r.pair }, { h: 'เชื่อมได้', f: (r) => (r.ok ? 'ได้' : 'ไม่ได้') }, { h: 'วิธี/ช่วงที่ซ้อนกัน', f: (r) => r.how }, { h: 'ข้อจำกัด', f: (r) => r.limit }], D.linkage)}</section>`);
-    p.push(`<div class="grid" style="margin-top:14px"><section class="card"><h3>ผลตรวจคุณภาพข้อมูล (${D.validation.length} รายการ)</h3>${table([{ h: 'สถานะ', f: (r) => ({ ok: '✅ ผ่าน', warn: '⚠ ระวัง', fail: '❌ ไม่ผ่าน' })[r.status] }, { h: 'รายการตรวจ', f: (r) => r.check }, { h: 'รายละเอียด', f: (r) => r.detail }], D.validation)}</section>
-      <section class="card"><h3>บันทึกการทำความสะอาด (ก่อน → หลัง)</h3>${table([{ h: 'ชุดข้อมูล', f: (r) => r.dataset }, { h: 'สิ่งที่ทำ', f: (r) => r.action }, { h: 'ก่อน', n: 1, f: (r) => r.before }, { h: 'หลัง', n: 1, f: (r) => r.after }], D.cleaning)}</section></div>`);
-    p.push(`<h2 class="sec">5.3 Data Dictionary</h2><section class="card">${table([{ h: 'ชุดข้อมูล', f: (r) => r[0] }, { h: 'ตัวแปร', f: (r) => r[1] }, { h: 'ความหมาย', f: (r) => r[2] }, { h: 'หน่วย', f: (r) => r[3] }, { h: 'ไฟล์', f: (r) => r[4] }, { h: 'คอลัมน์ต้นทาง', f: (r) => r[5] }], D.dictionary, { max: 100 })}</section>`);
-    p.push(`<h2 class="sec">5.4 Data Source Mapping</h2><p class="sec-sub">ตัวชี้วัดแต่ละตัวมาจากไฟล์ใด คอลัมน์ใด และคำนวณอย่างไร</p><section class="card">${table([{ h: 'ตัวชี้วัด', f: (r) => r[0] }, { h: 'ชุดข้อมูล', f: (r) => r[1] }, { h: 'ไฟล์', f: (r) => r[2] }, { h: 'คอลัมน์', f: (r) => r[3] }, { h: 'วิธีคำนวณ', f: (r) => r[4] }, { h: 'ตัวกรองที่ใช้ได้', f: (r) => r[5] }], D.source_map)}</section>`);
+    p.push(`<h2 class="sec">4.3 Data Dictionary</h2><section class="card">${table([{ h: 'ชุดข้อมูล', f: (r) => r[0] }, { h: 'ตัวแปร', f: (r) => r[1] }, { h: 'ความหมาย', f: (r) => r[2] }, { h: 'หน่วย', f: (r) => r[3] }, { h: 'ไฟล์', f: (r) => r[4] }, { h: 'คอลัมน์ต้นทาง', f: (r) => r[5] }], D.dictionary, { max: 100 })}</section>`);
+    p.push(`<h2 class="sec">4.4 Data Source Mapping</h2><p class="sec-sub">ตัวชี้วัดแต่ละตัวมาจากไฟล์ใด คอลัมน์ใด และคำนวณอย่างไร</p><section class="card">${table([{ h: 'ตัวชี้วัด', f: (r) => r[0] }, { h: 'ชุดข้อมูล', f: (r) => r[1] }, { h: 'ไฟล์', f: (r) => r[2] }, { h: 'คอลัมน์', f: (r) => r[3] }, { h: 'วิธีคำนวณ', f: (r) => r[4] }, { h: 'ตัวกรองที่ใช้ได้', f: (r) => r[5] }], D.source_map)}</section>`);
     return { html: p.join(''), after };
   }
 
-  APP.addTab('damage', '4 ความเสียหาย ความสัมพันธ์ และพยากรณ์', damage);
-  APP.addTab('explorer', '5 สำรวจข้อมูลและแหล่งที่มา', explorer);
+  function quality() {
+    const html = `<h2 class="sec">ตรวจสอบคุณภาพข้อมูล</h2><p class="sec-sub">ผลตรวจคุณภาพและบันทึกการทำความสะอาดข้อมูลก่อนนำไปวิเคราะห์</p>
+      <div class="grid"><section class="card"><h3>ผลตรวจคุณภาพข้อมูล (${D.validation.length} รายการ)</h3>${table([{ h: 'สถานะ', f: (r) => ({ ok: '✅ ผ่าน', warn: '⚠ ระวัง', fail: '❌ ไม่ผ่าน' })[r.status] }, { h: 'รายการตรวจ', f: (r) => r.check }, { h: 'รายละเอียด', f: (r) => r.detail }], D.validation)}</section>
+      <section class="card"><h3>บันทึกการทำความสะอาด (ก่อน → หลัง)</h3>${table([{ h: 'ชุดข้อมูล', f: (r) => r.dataset }, { h: 'สิ่งที่ทำ', f: (r) => r.action }, { h: 'ก่อน', n: 1, f: (r) => r.before }, { h: 'หลัง', n: 1, f: (r) => r.after }], D.cleaning)}</section></div>`;
+    return { html };
+  }
+
+  APP.addTab('q1', 'Q1 ข้อมูลบิดเบือน: สากล vs ไทย', APP.q1);
+  APP.addTab('q2', 'Q2 ภัยหลอกลวงและความผิดปกติ', damage);
+  APP.addTab('q3', 'Q3 เสรีภาพอินเทอร์เน็ตและภัย AI', APP.q3);
+  APP.addTab('details', 'รายละเอียดแต่ละชุดข้อมูล', explorer);
+  APP.addTab('quality', 'คุณภาพข้อมูล', quality);
 
   // ================================================================== KPI drill-down
   APP.onKpi = (key) => {

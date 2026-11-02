@@ -129,7 +129,7 @@
     const verdPer = per.filter((r) => r.vd > 0);
     const periodA = APP.periodText(x.ai.map((i) => A.d[i]));
     const noA = L.whyNot('afnc', f);
-    p.push(`<h2 class="sec">2.1 วิเคราะห์ตามเวลา</h2><p class="sec-sub">จำนวนข่าวปลอม (คำตัดสิน "ข่าวปลอม") และข่าวบิดเบือน แยกตามช่วงเวลา</p>${noA ? scope('afnc') : ''}
+    p.push(`<h2 class="sec">1.1 วิเคราะห์ตามเวลา</h2><p class="sec-sub">จำนวนข่าวปลอม (คำตัดสิน "ข่าวปลอม") และข่าวบิดเบือน แยกตามช่วงเวลา</p>${noA ? scope('afnc') : ''}
       <div class="row-tools">ความละเอียด: ${granSwitch()}</div>`);
     p.push('<div class="grid">');
     p.push(APP.card({ id: 'd1', title: `จำนวนข่าวปลอม${GRAN[gran]}`, unit: `เรื่อง/${{ month: 'เดือน', quarter: 'ไตรมาส', year: 'ปี' }[gran]}`, period: periodA, src: 'AFNC', span: true, msg: verdPer.length ? '' : (noA || 'ไม่มีข้อมูลในช่วงที่เลือก'),
@@ -158,8 +158,8 @@
       insight: eus.length ? (() => { const pk = eus.reduce((a, b) => (b[1] > a[1] ? b : a)); return `ช่วงที่มีการหักล้างสูงสุด: ${pk[0]} (${L.fmtInt(pk[1])} เรื่อง)`; })() : '' }) + '</div>');
     after.push(() => eus.length && mount('d2', { xAxis: { type: 'category', data: eus.map((e) => e[0]) }, yAxis: { type: 'value', name: 'เรื่อง' }, dataZoom: [{ type: 'inside' }], series: [{ type: 'bar', color: C.teal, data: eus.map((e) => e[1]) }] }));
 
-    // ---- 2.2 categories
-    p.push('<h2 class="sec">2.2 วิเคราะห์ประเภทข่าว</h2><p class="sec-sub">ใช้หมวดหมู่ที่ปรากฏในข้อมูลของศูนย์ต่อต้านข่าวปลอม (หมวด Economy, Drugs, Other news รวมเป็น "อื่น ๆ"; แปลเป็นไทย)</p>');
+    // ---- 1.2 categories
+    p.push('<h2 class="sec">1.2 วิเคราะห์ประเภทข่าว</h2><p class="sec-sub">ใช้หมวดหมู่ที่ปรากฏในข้อมูลของศูนย์ต่อต้านข่าวปลอม (หมวด Economy, Drugs, Other news รวมเป็น "อื่น ๆ"; แปลเป็นไทย)</p>');
     const cm = new Map(); for (const i of v) if (A.c[i] >= 0) { const k = A.cats[A.c[i]]; if (!cm.has(k)) cm.set(k, [0, 0, 0]); const s = A.st[i]; cm.get(k)[s === 0 ? 0 : s === 1 ? 1 : 2]++; }
     const cr = [...cm.entries()].map(([k, c]) => ({ k, n: L.sum(c), fake: c[0], dist: c[1], real: c[2] })).sort((a, b) => b.n - a.n);
     const tot = L.sum(cr.map((r) => r.n));
@@ -194,8 +194,8 @@
       <div><b>EU (${D.analysis.eu_years[0]}→${D.analysis.eu_years[1]})</b>${table([{ h: 'ประเด็น', f: (r) => r.topic }, { h: '% ต้น', n: 1, f: (r) => L.fmtNum(r.share_start, 1) }, { h: '% ปลาย', n: 1, f: (r) => L.fmtNum(r.share_end, 1) }, { h: 'เปลี่ยน (จุด)', n: 1, f: (r) => (r.change_pp > 0 ? '+' : '') + L.fmtNum(r.change_pp, 1) }], [...er.slice(0, 5), ...er.slice(-3)])}</div></div>
       <div class="cap">หน่วย: % ของเรื่องทั้งหมดในปีนั้น · เฉพาะหัวข้อที่มีอย่างน้อย 40 เรื่อง · คำนวณจากข้อมูลทั้งช่วง ไม่เปลี่ยนตามตัวกรอง</div></section>`);
 
-    // ---- 2.3 verdict share
-    p.push('<h2 class="sec">2.3 สัดส่วนข่าวจริงและข่าวปลอม</h2><p class="sec-sub">สัดส่วนของ "ข่าวที่ศูนย์ต่อต้านข่าวปลอมเลือกตรวจ" ไม่ใช่สัดส่วนข่าวปลอมทั้งหมดในสังคม — ศูนย์ฯ ไม่ได้สุ่มตรวจ</p>');
+    // ---- 1.3 verdict share
+    p.push('<h2 class="sec">1.3 สัดส่วนข่าวจริงและข่าวปลอม</h2><p class="sec-sub">สัดส่วนของ "ข่าวที่ศูนย์ต่อต้านข่าวปลอมเลือกตรวจ" ไม่ใช่สัดส่วนข่าวปลอมทั้งหมดในสังคม — ศูนย์ฯ ไม่ได้สุ่มตรวจ</p>');
     const sc = statusCounts(x.ai), unl = x.ai.filter((i) => A.itypes[A.it[i]] === 'Unlabelled').length, totA = L.sum(sc), vd = sc[0] + sc[1] + sc[2];
     p.push('<div class="grid">');
     p.push(APP.card({ id: 'd7', title: 'สัดส่วนผลตรวจ (Donut)', unit: '% ของโพสต์ทั้งหมดที่ผ่านตัวกรอง', period: periodA, src: 'AFNC', msg: totA ? '' : (noA || 'ไม่มีข้อมูล'), desc: 'ข่าวปลอม / ข่าวบิดเบือน / ข่าวจริง / อื่น ๆ (บทความความรู้ ประกาศเตือนภัย ข่าวอื่น ฯลฯ ที่ไม่ใช่คำตัดสิน)',
@@ -297,7 +297,7 @@
     return { html: p.join(''), after };
   }
 
-  APP.addTab('overview', '1 ภาพรวม', overview);
-  APP.addTab('disinfo', '2 ข่าวปลอมและข้อมูลบิดเบือน', disinfo);
-  APP.addTab('freedom', '3 เสรีภาพอินเทอร์เน็ตและเปรียบเทียบประเทศ', freedom);
+  APP.addTab('overview', 'ภาพรวม', overview);
+  APP.q1 = disinfo;
+  APP.q3 = freedom;
 })();
