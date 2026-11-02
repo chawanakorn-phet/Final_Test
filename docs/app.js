@@ -8,7 +8,7 @@
   const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   APP.$ = $; APP.esc = esc;
 
-  APP.state = { tab: 'overview', f: L.defaultFilters(D.meta), gran: 'month', notes: false, fc: 'fake_monthly', corr: ['cases', 'loss'] };
+  APP.state = { tab: 'overview', f: L.defaultFilters(D.meta), gran: 'month', notes: false };
 
   // ------------------------------------------------------------------ small builders
   APP.periodText = (dates) => { const d = dates.filter(Boolean).sort(); return d.length ? `${L.fmtDate(d[0])} → ${L.fmtDate(d[d.length - 1])}` : 'ไม่มีข้อมูลในช่วงที่เลือก'; };

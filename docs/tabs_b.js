@@ -1,4 +1,4 @@
-/* Tabs 4-5: Scam damage + correlation + forecast, Data Explorer & Sources. Also KPI drill-down and the summary report modal. */
+/* Tabs 4-5: Scam analysis and source details. Also KPI drill-down and the summary report modal. */
 (function () {
   'use strict';
   const { D, L, C, esc, card, kpi, table, mount, scope } = APP;
@@ -7,12 +7,8 @@
   const GRAN = H.GRAN;
   const link = (u, t = 'เปิดต้นทาง') => (u ? `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a>` : '–');
   const share = (w) => (w.vd ? ((w.fake + w.dist) / w.vd) * 100 : null);
-  const VARS = {
-    cases: ['จำนวนคดี', (w) => w.cases], loss: ['ความเสียหายรวม (ล้านบาท)', (w) => (w.loss === null ? null : w.loss / 1e6)], lpc: ['ความเสียหายต่อคดี (บาท)', (w) => (w.loss && w.cases ? w.loss / w.cases : null)],
-    share: ['สัดส่วนข่าวเท็จ AFNC (%)', share], vd: ['จำนวนคำตัดสิน AFNC (เรื่อง)', (w) => w.vd],
-  };
 
-  // ================================================================== 4. Damage, correlation, forecast
+  // ================================================================== 4. Scam analysis
   function damage() {
     const x = APP.ctx(), f = x.f, wk = x.wk, u = L.usable(wk), after = [], p = [], no = L.whyNot('acsc', f), gran = APP.state.gran;
     const period = APP.periodText(u.map((w) => w.ws)), periodAll = APP.periodText(wk.filter((w) => w.rep).map((w) => w.ws));
@@ -64,56 +60,15 @@
     p.push(`<section class="card" style="margin-top:14px"><h3>รายการต้นทาง (ตรวจสอบแหล่งที่มารายสัปดาห์)</h3><div class="row-tools"><button class="btn-ghost" id="dlW">⬇ ดาวน์โหลด CSV</button></div>${table(cols, wk.filter((w) => w.rep).slice().reverse(), { max: 200 })}<div class="cap">หน่วย: คดี/บาท · ช่วงเวลา: ${esc(periodAll)} · แต่ละแถวมีลิงก์ข่าวต้นทาง</div></section>`);
     after.push(() => { const b = document.getElementById('dlW'); if (b) b.onclick = () => APP.csv('acsc_weekly_filtered.csv', cols.filter((c) => !c.raw).concat([{ h: 'source_url', f: (w) => w.url || '' }]), wk.filter((w) => w.rep)); });
 
-    // ---- 2.2 correlation
-    p.push('<h2 class="sec">2.2 ความสัมพันธ์ทางสถิติ (Correlation)</h2><p class="sec-sub">Spearman (ไม่สมมติการกระจายแบบปกติ) · two-sided p-value · ต้องมีอย่างน้อย 10 คู่ข้อมูล · คำนวณใหม่จากสัปดาห์ที่ใช้ได้ตามตัวกรอง</p>');
-    const keys = Object.keys(VARS), vals = Object.fromEntries(keys.map((k) => [k, u.map((w) => VARS[k][1](w))]));
-    const rows = []; for (let i = 0; i < keys.length; i++) for (let j = i + 1; j < keys.length; j++) { const r = L.correlate(vals[keys[i]], vals[keys[j]], 'spearman', 10); rows.push({ a: VARS[keys[i]][0], b: VARS[keys[j]][0], r }); }
-    p.push(`<section class="card"><h3>ตารางสหสัมพันธ์ (Spearman) ระหว่างตัวชี้วัดรายสัปดาห์</h3>${table([{ h: 'ตัวแปร X', f: (r) => r.a }, { h: 'ตัวแปร Y', f: (r) => r.b }, { h: 'n', n: 1, f: (r) => r.r.n }, { h: 'r', n: 1, f: (r) => (r.r.ok ? L.fmtNum(r.r.r, 2) : '–') }, { h: 'p-value', n: 1, f: (r) => (r.r.ok ? (r.r.p < 0.001 ? r.r.p.toExponential(1) : L.fmtNum(r.r.p, 3)) : '–') },
-      { h: 'ระดับ', f: (r) => (r.r.ok ? L.strength(r.r.r) : 'ไม่คำนวณ') }, { h: 'หมายเหตุ', f: (r) => (r.r.ok ? (r.r.p < 0.05 ? 'มีนัยสำคัญ (α=0.05)' : 'ไม่มีนัยสำคัญ') : r.r.reason) }], rows, { hl: (r) => r.r.ok && r.r.p < 0.05 })}
-      <div class="cap">ช่วงเวลา: ${esc(period)} · 10 คู่ตัวแปรทดสอบพร้อมกัน จึงควรระวังผลบวกลวง · ความสัมพันธ์ ≠ เหตุและผล · ตัวแปรที่มีแนวโน้มร่วมกันตามเวลาอาจสัมพันธ์กันโดยไม่มีความเกี่ยวข้องกัน</div></section>`);
-    const cx = APP.state.cx || 'cases', cy = APP.state.cy || 'loss';
-    const sel = (id, v) => `<select class="sel" data-state="${id}">${keys.map((k) => `<option value="${k}"${k === v ? ' selected' : ''}>${esc(VARS[k][0])}</option>`).join('')}</select>`;
-    const rc = L.correlate(vals[cx], vals[cy], 'spearman', 10), rp = L.correlate(vals[cx], vals[cy], 'pearson', 10);
-    const pts = u.map((w) => [VARS[cx][1](w), VARS[cy][1](w), w.ws]).filter((q) => q[0] !== null && q[1] !== null);
-    p.push(`<div class="row-tools">แกน X ${sel('cx', cx)} แกน Y ${sel('cy', cy)}</div><div class="grid">`);
-    p.push(APP.card({ id: 'c1', title: `Scatter: ${VARS[cx][0]} vs ${VARS[cy][0]}`, unit: `${VARS[cx][0]} / ${VARS[cy][0]}`, period, src: 'ACSC + AFNC', msg: pts.length >= 10 ? '' : (no || `ไม่มีข้อมูลเพียงพอสำหรับการวิเคราะห์นี้: มี ${pts.length} คู่ (ต้องการ ≥ 10)`),
-      desc: `${L.interpret(rc)} · Pearson: ${rp.ok ? 'r = ' + L.fmtNum(rp.r, 2) + ', p = ' + (rp.p < 0.001 ? rp.p.toExponential(1) : L.fmtNum(rp.p, 3)) : '–'}`, insight: rc.ok ? L.interpret(rc) : '' }));
-    after.push(() => { if (pts.length < 10) return; const fit = L.linfit(pts.map((q) => q[0]), pts.map((q) => q[1])), xs = pts.map((q) => q[0]), x0 = Math.min(...xs), x1 = Math.max(...xs);
-      mount('c1', { tooltip: { trigger: 'item', formatter: (q) => `${q.data[2] || ''}<br>X ${L.fmtNum(q.data[0], 1)} · Y ${L.fmtNum(q.data[1], 1)}` }, xAxis: { type: 'value', scale: true, name: VARS[cx][0] }, yAxis: { type: 'value', scale: true, name: VARS[cy][0] },
-        series: [{ type: 'scatter', symbolSize: 9, color: C.fake, data: pts }, { type: 'line', showSymbol: false, silent: true, color: C.grey, lineStyle: { type: 'dashed' }, data: [[x0, fit.k * x0 + fit.c], [x1, fit.k * x1 + fit.c]] }] }); });
+    // ---- 2.2 lag analysis (same analysis as the Streamlit dashboard)
+    p.push('<h2 class="sec">2.2 ประเภทภัยและความสัมพันธ์กับข่าวปลอม</h2>');
     const lag = D.analysis.lag;
     p.push(APP.card({ id: 'c2', title: 'ข่าวปลอมนำหน้าหรือตามหลังคดีหลอกลวงหรือไม่ (lag −4…+4 สัปดาห์)', unit: 'สหสัมพันธ์ r ของการเปลี่ยนแปลงรายสัปดาห์', period: 'ทั้งช่วงข้อมูล ACSC (ไม่เปลี่ยนตามตัวกรอง)', src: 'AFNC + ACSC', desc: 'ใช้การเปลี่ยนแปลงสัปดาห์ต่อสัปดาห์เพื่อตัดแนวโน้มร่วม · lag บวก = ข่าวปลอมนำหน้า · แถบเทา = เกณฑ์ ±1.96/√n · ระดับดิบ r = ' + L.fmtNum(D.analysis.detrended.raw, 2) + ' หายไปหลังตัดแนวโน้ม (r = ' + L.fmtNum(D.analysis.detrended.detrended, 2) + ')',
       insight: `มี ${lag.filter((l) => l.significant).length} จาก ${lag.length} lag ที่เกินเกณฑ์ — ไม่พบหลักฐานว่าข่าวปลอมนำหรือตามหลังคดี (ผลที่ไม่พบ ไม่ใช่การพิสูจน์ว่าไม่มี)` }));
     after.push(() => mount('c2', { xAxis: { type: 'category', data: lag.map((l) => l.lag), name: 'lag (สัปดาห์)' }, yAxis: { type: 'value', min: -0.6, max: 0.6, name: 'r' }, tooltip: { trigger: 'axis', formatter: (q) => { const l = lag[q[0].dataIndex]; return `lag ${l.lag}<br>r = ${L.fmtNum(l.r, 2)} (n=${l.n}, เกณฑ์ ±${L.fmtNum(l.ci95, 2)})`; } },
       series: [{ type: 'bar', data: lag.map((l) => ({ value: l.r, itemStyle: { color: l.significant ? C.fake : '#c9c3c5' } })), markArea: { silent: true, itemStyle: { color: 'rgba(150,150,155,.14)' }, data: [[{ yAxis: -lag[0].ci95 }, { yAxis: lag[0].ci95 }]] } }] }));
     p.push('</div>');
-    p.push(`<section class="card" style="margin-top:14px"><h3>เสรีภาพอินเทอร์เน็ต ↔ ข่าวปลอม/ความเสียหาย: ทำได้หรือไม่</h3>${table([{ h: 'คู่ข้อมูล', f: (r) => r.pair }, { h: 'เชื่อมได้', f: (r) => (r.ok ? 'ได้' : 'ไม่ได้') }, { h: 'เชื่อมด้วยอะไร', f: (r) => r.how }, { h: 'ข้อจำกัด', f: (r) => r.limit }], D.linkage)}
-      <div class="warn">ระบบไม่คำนวณ Scatter/สหสัมพันธ์ระหว่างเสรีภาพกับข่าวปลอมหรือความเสียหายเมื่อข้อมูลเชื่อมกันไม่ได้อย่างสมเหตุสมผล (ดูแท็บ 3 ส่วน 3.3 สำหรับผลที่ทดสอบแล้วและข้อความ "ไม่มีข้อมูลเพียงพอ")</div></section>`);
 
-    // ---- 2.3 forecast
-    p.push('<h2 class="sec">2.3 แนวโน้มและการพยากรณ์ (Forecast)</h2><p class="sec-sub">เปรียบเทียบ 5 แบบจำลอง (Naive, Moving average, Exponential smoothing, Holt damped trend, ARIMA(1,1,1)) ด้วย rolling-origin back-test แล้วเลือก RMSE ต่ำสุด · ค่าพยากรณ์แยกจากข้อมูลจริงด้วยเส้นประและแถบสี · ไม่เปลี่ยนตามตัวกรอง</p>');
-    const key = APP.state.fc || 'fake_monthly', fc = D.forecast[key];
-    p.push(`<div class="row-tools"><div class="seg"><button data-set="fc=fake_monthly" class="${key === 'fake_monthly' ? 'on' : ''}">จำนวนข่าวเท็จรายเดือน</button><button data-set="fc=scam_weekly" class="${key === 'scam_weekly' ? 'on' : ''}">ความเสียหายรายสัปดาห์</button></div></div>`);
-    if (!fc.ok) p.push(`<div class="warn">${esc(fc.reason)}</div>`);
-    else {
-      const h = fc.history, last = h.d.length - 1;
-      const hist = h.d.map((d, i) => [d, h.v[i]]), pred = [[h.d[last], h.v[last]], ...fc.forecast.map((r) => [r.date, r.forecast])];
-      p.push('<div class="grid">' + APP.card({ id: 'p1', title: `${fc.title}: ข้อมูลจริงและค่าพยากรณ์ล่วงหน้า ${fc.horizon} ${key === 'fake_monthly' ? 'เดือน' : 'สัปดาห์'}`, unit: fc.unit, period: `ข้อมูลจริง ${h.d[0]} → ${h.d[last]} (${fc.n_obs} จุด) · พยากรณ์ ${fc.forecast[0].date} → ${fc.forecast[fc.forecast.length - 1].date}`, src: 'AFNC / ACSC (ประมวลผลด้วย Python statsmodels)', span: true,
-        desc: `แบบจำลองที่เลือก: ${fc.model} · ช่วงความไม่แน่นอนประมาณจาก ±1.96 × RMSE ของ back-test (ไม่ใช่ช่วงความเชื่อมั่นเชิงทฤษฎี) · ${fc.caveat}`,
-        insight: `${fc.model}: พยากรณ์ ${L.fmtNum(fc.forecast[0].forecast, 1)} ${fc.unit.split('/')[0]} ในช่วงถัดไป (ช่วง ${L.fmtNum(fc.forecast[0].lower, 1)}–${L.fmtNum(fc.forecast[0].upper, 1)}) · RMSE back-test ${L.fmtNum(fc.metrics[0].RMSE, 1)}`,
-        extra: `<div class="warn">ค่าพยากรณ์ไม่ใช่ข้อมูลจริง — ${esc(fc.caveat)}</div>` }) + '</div>');
-      p.push('');
-      APP.pendingFc = () => mount('p1', { legend: { top: 0, data: ['ข้อมูลจริง', `ค่าพยากรณ์ (${fc.model})`, 'ช่วงความไม่แน่นอน'] }, tooltip: { trigger: 'axis' }, xAxis: { type: 'time' }, yAxis: { type: 'value', name: fc.unit, scale: true }, dataZoom: [{ type: 'inside' }],
-        series: [{ name: 'ข้อมูลจริง', type: 'line', color: C.fake, showSymbol: false, data: hist }, { name: `ค่าพยากรณ์ (${fc.model})`, type: 'line', color: C.blue, lineStyle: { type: 'dashed', width: 3 }, symbolSize: 7, data: pred },
-          { name: 'ขอบล่าง', type: 'line', stack: 'band', lineStyle: { opacity: 0 }, showSymbol: false, silent: true, data: fc.forecast.map((r) => [r.date, r.lower]), tooltip: { show: false } },
-          { name: 'ช่วงความไม่แน่นอน', type: 'line', stack: 'band', lineStyle: { opacity: 0 }, showSymbol: false, areaStyle: { color: 'rgba(62,92,138,.18)' }, data: fc.forecast.map((r) => [r.date, r.upper - r.lower]), tooltip: { show: false } }] });
-      after.push(() => APP.pendingFc());
-      p.push(`<div class="grid" style="margin-top:14px"><section class="card"><h3>ความแม่นยำของแต่ละแบบจำลอง (rolling-origin back-test)</h3>${table([{ h: 'แบบจำลอง', f: (r) => r.model }, { h: 'MAE', n: 1, f: (r) => L.fmtNum(r.MAE, 2) }, { h: 'RMSE', n: 1, f: (r) => L.fmtNum(r.RMSE, 2) }, { h: 'จุดที่ประเมิน', n: 1, f: (r) => r.n_points }], fc.metrics, { hl: (r) => r.model === fc.model })}
-        <div class="cap">หน่วย: ${esc(fc.unit)} · เลือกแบบจำลองที่ RMSE ต่ำสุด (แถวสีเข้ม) · MAE = ค่าคลาดเคลื่อนสัมบูรณ์เฉลี่ย · RMSE = รากที่สองของค่าคลาดเคลื่อนกำลังสองเฉลี่ย</div></section>
-        <section class="card"><h3>เปรียบเทียบค่าจริงกับค่าพยากรณ์ (back-test ก้าวแรกของแต่ละจุดเริ่มต้น)</h3>${table([{ h: 'ช่วง', f: (r) => r.date }, { h: 'ค่าจริง', n: 1, f: (r) => L.fmtNum(r.actual, 1) }, { h: 'ค่าพยากรณ์', n: 1, f: (r) => L.fmtNum(r.predicted, 1) }, { h: 'คลาดเคลื่อน', n: 1, f: (r) => L.fmtNum(r.actual - r.predicted, 1) }], fc.backtest.slice().reverse())}
-        <div class="cap">หน่วย: ${esc(fc.unit)} · แบบจำลอง: ${esc(fc.model)}</div></section></div>`);
-      p.push(`<section class="card" style="margin-top:14px"><h3>ตารางค่าพยากรณ์ (แยกจากข้อมูลจริง)</h3>${table([{ h: 'ช่วง', f: (r) => r.date }, { h: 'ค่าพยากรณ์', n: 1, f: (r) => L.fmtNum(r.forecast, 1) }, { h: 'ขอบล่าง', n: 1, f: (r) => L.fmtNum(r.lower, 1) }, { h: 'ขอบบน', n: 1, f: (r) => L.fmtNum(r.upper, 1) }], fc.forecast)}</section>`);
-    }
     return { html: p.join(''), after };
   }
 
@@ -149,12 +104,6 @@
     const m = D.source_map.find((r) => r[0] === DS[id].map);
     if (m) p.push(`<div class="note"><b>แหล่งที่มา:</b> ${esc(m[1])} · <code>${esc(m[2])}</code> · ${esc(m[3])}<br><b>วิธีคำนวณ:</b> ${esc(m[4])}</div>`);
 
-    p.push('<h2 class="sec">4.2 ตรวจสอบข้อมูลก่อนวิเคราะห์ (Inventory)</h2><p class="sec-sub">โครงสร้าง จำนวนแถว/คอลัมน์ ช่วงเวลา ค่าที่หายไป ค่าซ้ำ และความสามารถในการเชื่อมโยงข้ามชุดข้อมูล</p>');
-    p.push(`<section class="card">${table([{ h: 'ชุดข้อมูล', f: (r) => r.dataset }, { h: 'ไฟล์', f: (r) => r.files }, { h: '1 แถว =', f: (r) => r.grain }, { h: 'แถว', n: 1, f: (r) => L.fmtInt(r.rows) }, { h: 'คอลัมน์ต้นทาง', n: 1, f: (r) => r.cols }, { h: 'เริ่ม', f: (r) => L.fmtDate(r.from) }, { h: 'สิ้นสุด', f: (r) => L.fmtDate(r.to) }, { h: 'ค่าว่าง (%)', n: 1, f: (r) => L.fmtNum(r.missing_pct, 1) }, { h: 'ข้อสังเกต', f: (r) => r.note }], D.inventory)}
-      <div class="cap">ค่าว่าง = ค่าเฉลี่ยของคอลัมน์สำคัญ (ไม่ใช่ทุกคอลัมน์) · สัปดาห์ที่ไม่มีข้อมูลคดีไม่ถูกเติมเป็น 0</div></section>`);
-    p.push(`<section class="card" style="margin-top:14px"><h3>ช่วงเวลาตรงกันหรือไม่ และเชื่อมโยงข้ามชุดได้จริงหรือไม่</h3>${table([{ h: 'คู่ข้อมูล', f: (r) => r.pair }, { h: 'เชื่อมได้', f: (r) => (r.ok ? 'ได้' : 'ไม่ได้') }, { h: 'วิธี/ช่วงที่ซ้อนกัน', f: (r) => r.how }, { h: 'ข้อจำกัด', f: (r) => r.limit }], D.linkage)}</section>`);
-    p.push(`<h2 class="sec">4.3 Data Dictionary</h2><section class="card">${table([{ h: 'ชุดข้อมูล', f: (r) => r[0] }, { h: 'ตัวแปร', f: (r) => r[1] }, { h: 'ความหมาย', f: (r) => r[2] }, { h: 'หน่วย', f: (r) => r[3] }, { h: 'ไฟล์', f: (r) => r[4] }, { h: 'คอลัมน์ต้นทาง', f: (r) => r[5] }], D.dictionary, { max: 100 })}</section>`);
-    p.push(`<h2 class="sec">4.4 Data Source Mapping</h2><p class="sec-sub">ตัวชี้วัดแต่ละตัวมาจากไฟล์ใด คอลัมน์ใด และคำนวณอย่างไร</p><section class="card">${table([{ h: 'ตัวชี้วัด', f: (r) => r[0] }, { h: 'ชุดข้อมูล', f: (r) => r[1] }, { h: 'ไฟล์', f: (r) => r[2] }, { h: 'คอลัมน์', f: (r) => r[3] }, { h: 'วิธีคำนวณ', f: (r) => r[4] }, { h: 'ตัวกรองที่ใช้ได้', f: (r) => r[5] }], D.source_map)}</section>`);
     return { html: p.join(''), after };
   }
 

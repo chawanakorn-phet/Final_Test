@@ -1,16 +1,7 @@
-/* Start-up: cover page, tab bar, summary report modal. */
+/* Start-up: dashboard tabs and summary report modal. */
 (function () {
   'use strict';
   const { D, L, esc, $ } = APP;
-
-  // ---- cover statistics (all from the data bundle)
-  const th = D.fotn.filter((r) => r.iso3 === 'THA').sort((a, b) => b.y - a.y)[0];
-  const v = D.afnc.it.filter((t, i) => D.afnc.itypes[t] === 'Verdict').length;
-  const u = D.weekly.filter((w) => w.use);
-  $('#cover-stats').innerHTML = [
-    [L.fmtInt(v), 'คำตัดสินข่าวของศูนย์ต่อต้านข่าวปลอม (2019–2026)'], [`${L.fmtNum(L.sum(u.map((w) => w.loss)) / 1e6, 0)} ล้านบาท`, `ความเสียหายคดีออนไลน์ ${u.length} สัปดาห์ (พ.ย. 2025 – ต.ค. 2026)`],
-    [`${th.total}/100`, `คะแนนเสรีภาพอินเทอร์เน็ตของไทย (ปีข้อมูล ${th.y})`],
-  ].map(([a, b]) => `<div><b>${a}</b><span>${esc(b)}</span></div>`).join('');
 
   // ---- minimal Markdown -> HTML for the summary report
   const inline = (s) => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\*(.+?)\*/g, '<i>$1</i>').replace(/`(.+?)`/g, '<code>$1</code>');
@@ -36,10 +27,6 @@
   APP.mdToHtml = md;
 
   // ---- wiring
-  function openApp() { $('#cover').hidden = true; $('#app').hidden = false; APP.buildSidebar(); APP.buildTabs(); APP.refresh(); window.scrollTo({ top: 0 }); }
-  $('#btnOpen').addEventListener('click', openApp);
-  $('#btnHome').addEventListener('click', () => { $('#app').hidden = true; $('#cover').hidden = false; window.scrollTo({ top: 0 }); });
   $('#btnSummary').addEventListener('click', showSummary);
-  $('#loading').hidden = true; $('#cover').hidden = false;
-  if (location.hash === '#app') openApp();
+  $('#loading').hidden = true; APP.buildSidebar(); APP.buildTabs(); APP.refresh();
 })();
