@@ -1,5 +1,4 @@
-"""The written summary and the data bundle are built from the processed tables; check structure and that nothing is broken."""
-import json
+"""The written summary is built from the processed tables; check structure and that nothing is empty or broken."""
 import re
 
 import pytest
@@ -8,19 +7,14 @@ import config
 from analytics import qfindings as qf
 from dashboard import summary
 from data_processing import store
-from pipeline import build_data as bd
 
 
 @pytest.fixture(scope="module")
-def built():
+def md():
     if not store.is_built():
         pytest.skip("processed tables not built")
-    return bd.build()
-
-
-@pytest.fixture(scope="module")
-def md(built):
-    return built["summary_md"], store.load_tables()
+    t = store.load_tables()
+    return summary.build_summary_markdown(t, store.load_meta(), qf.run(t)), t
 
 
 def test_has_every_section_and_question(md):
@@ -36,6 +30,7 @@ def test_numbers_match_the_tables(md):
     w = t["weekly"]
     last = w[w["acsc_usable"]].iloc[-1]
     assert f"{last['acsc_cases']:,.0f} คดี" in text
+    assert f"{int(t['validation']['status'].eq('ok').sum())}" in text
     for name in ("AFNC", "ACSC", "EUvsDisinfo", "AI Incident Database", "Freedom on the Net"):
         assert name in text
 
@@ -47,53 +42,24 @@ def test_no_broken_values_or_empty_tables(md):
         assert len(tbl.strip().splitlines()) >= 3, "table with no data rows"
 
 
-def test_limits_and_forecast_and_linkage_are_stated(md):
+def test_limits_are_stated(md):
     text, _ = md
     assert "ไม่ใช่ข้อมูลเปิดของตำรวจ" in text and "ไม่ใช่ที่เกิดเหตุ" in text and "ไม่พบความสัมพันธ์" in text
-    assert "พยากรณ์ (แบบจำลอง" in text and "เชื่อมโยงข้ามชุดได้หรือไม่" in text and "ไม่ได้" in text
 
 
-def test_guide_describes_the_real_tabs_filters_and_buttons(md):
+def test_guide_covers_every_menu_page_filter_and_switch(md):
     text, _ = md
-    guide = text.split("## 3.")[0]
-    ui = "".join(open(config.ROOT / "docs" / f, encoding="utf-8").read() for f in ("index.html", "app.js", "tabs_a.js", "tabs_b.js"))
-    for tab in ["1 ภาพรวม", "2 ข่าวปลอมและข้อมูลบิดเบือน", "3 เสรีภาพอินเทอร์เน็ตและเปรียบเทียบประเทศ", "4 ความเสียหาย ความสัมพันธ์ และพยากรณ์", "5 สำรวจข้อมูลและแหล่งที่มา"]:
-        assert tab in guide and tab in ui, tab
-    for label in ["ช่วงวันที่", "ไตรมาส", "เดือน", "ประเทศไทย / ต่างประเทศ", "กลุ่มประเทศ", "ประเภทข่าว", "สถานะข่าว", "หมวดหมู่ความเสียหาย", "แหล่งข้อมูล"]:
-        assert label in ui, label
-    for button in ["Reset Filters", "สรุปทั้งแดชบอร์ด", "หน้าแรก", "Open Dashboard"]:
-        assert button in ui and (button == "Open Dashboard" or button.replace("สรุปทั้งแดชบอร์ด", "สรุปทั้งแดชบอร์ด") in text), button
+    for page in ["ภาพรวม", "Q1 ข้อมูลบิดเบือน", "Q2 ภัยหลอกลวง", "Q3 เสรีภาพ", "รายละเอียดแต่ละชุดข้อมูล", "คุณภาพข้อมูล"]:
+        assert page in text.split("## 3.")[0], page
+    for f in ["ช่วงปี", "หมวดข่าวไทย", "ช่วงสัปดาห์", "ความไวตรวจความผิดปกติ", "ปีข้อมูลเสรีภาพ", "เปรียบเทียบประเทศ", "ช่วงปีเหตุการณ์ AI"]:
+        assert f in text, f
+    for sw in ["สรุปแดชบอร์ดทั้งหมด", "แสดงหมายเหตุ", "ประมวลผลใหม่"]:
+        assert sw in text
 
 
-def test_bundle_structure_and_consistency(built):
-    t = store.load_tables()
-    assert len(built["afnc"]["d"]) == len(t["afnc_clean"]) == len(built["afnc"]["id"]) == len(built["afnc"]["st"])
-    assert len(built["weekly"]) == len(t["weekly"]) and len(built["eu"]["d"]) == len(t["eu_debunks"]) and len(built["fotn"]) == len(t["fotn"])
-    assert built["meta"]["date_min"] <= "1983-09-26" and built["meta"]["date_max"] == store.load_meta()["afnc_last_date"]
-    assert sorted(built["analysis"]["findings"]) == ["q1", "q2", "q3"] and all(len(v) >= 5 for v in built["analysis"]["findings"].values())
-    for k in ("dictionary", "source_map", "inventory", "linkage", "validation", "cleaning"):
-        assert built[k], k
-
-
-def test_missing_weeks_stay_null_not_zero(built):
-    miss = [w for w in built["weekly"] if not w["rep"] and w["ws"] >= "2025-11-09"]
-    assert len(miss) == 3 and all(w["cases"] is None and w["loss"] is None for w in miss)
-    assert sum(1 for w in built["weekly"] if w["use"]) == 47 and sum(1 for w in built["weekly"] if w["sus"]) == 1
-
-
-def test_forecasts_have_metrics_and_refusals_are_explained(built):
-    for k, fc in built["forecast"].items():
-        assert fc["ok"] is True or fc["reason"], k
-        if fc["ok"]:
-            assert fc["metrics"][0]["model"] == fc["model"] and fc["metrics"][0]["RMSE"] <= max(m["RMSE"] for m in fc["metrics"])
-            assert all(r["lower"] <= r["forecast"] <= r["upper"] for r in fc["forecast"])
-
-
-def test_linkage_flags_the_pairs_that_cannot_be_correlated(built):
-    by = {r["pair"]: r for r in built["linkage"]}
-    assert by["ACSC ↔ Freedom on the Net"]["ok"] is False and by["AFNC ↔ Freedom on the Net"]["ok"] is False and by["AFNC ↔ ACSC"]["ok"] is True
-
-
-def test_data_js_is_valid_json_without_nan(tmp_path, built):
-    text = json.dumps(built, ensure_ascii=False, separators=(",", ":"), allow_nan=False)   # raises on NaN / inf
-    assert json.loads(text)["meta"]["built_at"]
+def test_guide_labels_match_the_real_widgets():
+    src = open(config.ROOT / "dashboard" / "question_pages.py", encoding="utf-8").read() + open(config.ROOT / "app.py", encoding="utf-8").read()
+    for label in ["ช่วงปี", "หมวดข่าวไทย", "ผลตรวจที่นับในกราฟหมวด", "ช่วงสัปดาห์", "ความไวตรวจความผิดปกติ", "ปีข้อมูลเสรีภาพ", "เปรียบเทียบประเทศ", "ช่วงปีเหตุการณ์ AI",
+                  "สรุปแดชบอร์ดทั้งหมด", "แสดงหมายเหตุ"]:
+        assert label in src, label
+    assert "ประมวลผลใหม่" in src

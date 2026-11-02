@@ -50,7 +50,6 @@ dashboard/ (theme, charts, components, pages) + app.py   7 แท็บ
 | 5 | KPI และ metrics | `analytics/metrics.py` | ✅ |
 | 6 | ธีม กราฟ คอมโพเนนต์ 7 แท็บ | `dashboard/`, `app.py` | ✅ |
 | 7 | Unit tests (35 รายการ) + smoke test แอป | `tests/` | ✅ |
-| 7.5 | เว็บแดชบอร์ดใหม่ตาม spec: Python (pipeline) → docs/data.js → HTML/CSS/JS + ECharts, หน้าปก + 5 แท็บ, ตัวกรองกลาง, สหสัมพันธ์พร้อม p-value, พยากรณ์ 5 แบบจำลอง, Data Explorer | `pipeline/`, `docs/`, `analytics/stats.py`, `analytics/forecast.py`, `analytics/gfilters.py` | ✅ |
 | 7.4 | ปุ่มรายงานสรุปทั้งแดชบอร์ด (วิธีอ่าน + ข้อมูล + ผลวิเคราะห์ + ข้อจำกัด ดาวน์โหลด .md) | `dashboard/summary.py` | ✅ |
 | 7.3 | ตัวกรองหน้า Q1–Q3 (7 ตัว + ปุ่มล้าง) ทดสอบกรณีขอบ: ช่วงว่าง/สั้น/ไม่เลือกประเทศ | `analytics/filters.py`, `dashboard/question_pages.py` | ✅ |
 | 7.2 | หน้า Q1–Q3 (กราฟตามคำถาม) + วิเคราะห์ความผิดปกติ หัวข้อเพิ่ม/ลด ธีมซ้อนทับ เสรีภาพ vs AIID | `analytics/comparisons.py`, `dashboard/question_pages.py` | ✅ |
