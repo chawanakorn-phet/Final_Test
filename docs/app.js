@@ -3,7 +3,7 @@
   'use strict';
   const D = window.DATA, L = window.L;
   const APP = (window.APP = { D, L, state: null, charts: [], tabs: {}, order: [] });
-  APP.C = { fake: '#0F766E', fakeL: '#A8DAD6', alert: '#EAF5F4', real: '#2C8A68', grey: '#657887', other: '#CBD5DD', blue: '#3565A8', orange: '#C9841D', teal: '#138A8A', purple: '#7663A8', ink: '#172B3A' };
+  APP.C = { fake: '#E08A3C', fakeL: '#F2C08B', alert: '#F8E9ED', real: '#2E8B57', grey: '#8B8588', other: '#C9C3C5', blue: '#3E5C8A', orange: '#E08A3C', teal: '#2F7F79', purple: '#8E4B8F', ink: '#2B2326' };
   const $ = (s, el = document) => el.querySelector(s);
   const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   APP.$ = $; APP.esc = esc;
@@ -24,7 +24,7 @@
   APP.kpi = ({ key, label, value, sub, delta, color }) => {
     let d = '';
     if (delta !== undefined) d = delta === null ? '<div class="k-delta flat">เทียบช่วงก่อนหน้า: –</div>' : `<div class="k-delta ${delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat'}">${delta > 0 ? '▲' : delta < 0 ? '▼' : '■'} ${L.fmtNum(Math.abs(delta), 1)}% เทียบช่วงก่อนหน้า</div>`;
-    return `<button class="kpi" data-kpi="${key}" style="--c:${color || '#12324A'}"><div class="k-label">${esc(label)}</div><div class="k-value">${value}</div><div class="k-sub">${esc(sub)}</div>${d}</button>`;
+    return `<button class="kpi" data-kpi="${key}" style="--c:${color || '#7B1E3A'}"><div class="k-label">${esc(label)}</div><div class="k-value">${value}</div><div class="k-sub">${esc(sub)}</div>${d}</button>`;
   };
 
   APP.table = (cols, rows, opts = {}) => {

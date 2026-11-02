@@ -39,7 +39,7 @@ section[data-testid="stSidebar"] button {{ background: rgba(255,255,255,.15); bo
 [data-testid="stPlotlyChart"], [data-testid="stDataFrame"] {{ background: #fff; border: 1px solid {C['grid']}; border-radius: 12px;
            padding: .5rem .6rem; box-shadow: 0 1px 2px rgba(60,20,30,.05); }}
 .kpi {{ background: #fff; border: 1px solid {C['grid']}; border-radius: 12px; padding: .7rem .8rem; height: 100%;
-        display: flex; gap: .65rem; align-items: flex-start; box-shadow: 0 1px 2px rgba(18,50,74,.06); }}
+        display: flex; gap: .65rem; align-items: flex-start; box-shadow: 0 1px 2px rgba(60,20,30,.05); }}
 .kpi .ic {{ flex: 0 0 38px; height: 38px; border-radius: 50%; border: 2px solid var(--accent, {C['scam']}); color: var(--accent, {C['scam']});
             display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .95rem; }}
 .kpi .body {{ min-width: 0; }}
@@ -48,14 +48,14 @@ section[data-testid="stSidebar"] button {{ background: rgba(255,255,255,.15); bo
 .kpi .delta {{ font-size: .74rem; margin-top: .1rem; color: {C['muted']}; }}
 .kpi .delta.up {{ color: {C['scam']}; }}
 .kpi .delta.down {{ color: {C['global']}; }}
-.find {{ background: #fff; border: 1px solid {C['grid']}; border-left: 4px solid {C['fake']}; border-radius: 10px;
+.find {{ background: #fff; border: 1px solid {C['grid']}; border-left: 4px solid {C['scam']}; border-radius: 10px;
          padding: .6rem .8rem; font-size: .88rem; font-weight: 600; min-height: 4.2rem; height: 100%; color: {C['ink']}; margin-bottom: .5rem; }}
 .find .n {{ color: {C['scam']}; font-weight: 700; margin-right: .3rem; }}
 [data-testid="stVerticalBlockBorderWrapper"]:has(> div > [data-testid="stVerticalBlock"] .filterbar) {{ background: #fff; border-radius: 12px; border: 1px solid {C['grid']}; }}
 .filterbar {{ font-size: .72rem; color: {C['muted']}; margin: 0 0 .2rem; }}
 .note {{ background: #fff8e6; border-left: 4px solid {C['warn']}; padding: .55rem .8rem; border-radius: 6px;
          font-size: .85rem; color: #5a4a14; margin: .4rem 0 .8rem; }}
-.note.info {{ background: #EAF3F8; border-left-color: {C['freedom']}; color: #24465F; }}
+.note.info {{ background: #f3eef0; border-left-color: {C['scam']}; color: #4a2a35; }}
 .read {{ color: {C['muted']}; font-size: .82rem; margin: -.2rem 0 .9rem; }}
 .source {{ color: {C['muted']}; font-size: .75rem; margin-top: .3rem; }}
 @media (max-width: 640px) {{ .kpi .value {{ font-size: 1.3rem; }} .topbar .t {{ font-size: 1rem; }} }}

@@ -130,23 +130,23 @@ STATUS_TH = {1: "เสรี", 2: "เสรีบางส่วน", 3: "ไ�
 # Colours (one meaning per hue)
 # ---------------------------------------------------------------------------
 COLORS = {
-    "scam": "#12324A",        # online scams / primary navy
-    "fake": "#0F766E",        # fake news / teal
-    "ai": "#7663A8",          # AI incidents
-    "freedom": "#3565A8",     # internet freedom
-    "global": "#2C8A68",      # EUvsDisinfo
-    "ink": "#172B3A",
-    "muted": "#657887",
-    "grid": "#DCE7ED",
-    "paper": "#F3F7FA",
-    "warn": "#A66A12",
+    "scam": "#7B1E3A",        # online scams (primary, maroon)
+    "fake": "#E08A3C",        # fake news
+    "ai": "#8E4B8F",          # AI incidents
+    "freedom": "#3E5C8A",     # internet freedom
+    "global": "#2F7F79",      # EUvsDisinfo
+    "ink": "#2B2326",
+    "muted": "#8B8386",
+    "grid": "#EAE4E4",
+    "paper": "#F5F2F2",
+    "warn": "#D4A017",
 }
 CATEGORY_COLORS = {
-    "นโยบายรัฐ/ข่าวสาร": "#254F6F",
-    "ผลิตภัณฑ์สุขภาพ": "#C35A73",
-    "การเงิน-หุ้น": "#C9841D",
-    "ภัยพิบัติ": "#D9A441",
-    "ความสงบ/ความมั่นคง": "#3565A8",
-    "อาชญากรรมออนไลน์ (หมวดใหม่ 2026)": "#0F766E",
-    "อื่น ๆ": "#8B9AA5",
+    "นโยบายรัฐ/ข่าวสาร": "#7B1E3A",
+    "ผลิตภัณฑ์สุขภาพ": "#C0506E",
+    "การเงิน-หุ้น": "#E08A3C",
+    "ภัยพิบัติ": "#F2C078",
+    "ความสงบ/ความมั่นคง": "#3E5C8A",
+    "อาชญากรรมออนไลน์ (หมวดใหม่ 2026)": "#2B2326",
+    "อื่น ๆ": "#B9B3AE",
 }
