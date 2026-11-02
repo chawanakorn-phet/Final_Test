@@ -3,7 +3,7 @@
   'use strict';
   const D = window.DATA, L = window.L;
   const APP = (window.APP = { D, L, state: null, charts: [], tabs: {}, order: [] });
-  APP.C = { fake: '#E08A3C', fakeL: '#F2C08B', alert: '#F8E9ED', real: '#2E8B57', grey: '#8B8588', other: '#C9C3C5', blue: '#3E5C8A', orange: '#E08A3C', teal: '#2F7F79', purple: '#8E4B8F', ink: '#2B2326' };
+  APP.C = { scam: '#12324A', fake: '#0F766E', fakeL: '#A8DAD6', ai: '#7663A8', freedom: '#3565A8', global: '#138A8A', warn: '#C9841D', ink: '#172B3A', muted: '#657887', grid: '#DCE7ED', paper: '#F3F7FA', real: '#2C8A68', grey: '#657887', other: '#CBD5DD', blue: '#3565A8', orange: '#C9841D', teal: '#0F766E', purple: '#7663A8', alert: '#EAF5F4' };
   const $ = (s, el = document) => el.querySelector(s);
   const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   APP.$ = $; APP.esc = esc;
@@ -45,7 +45,7 @@
   APP.mount = (id, option) => {
     const el = document.getElementById(id); if (!el || !window.echarts) return null;
     const c = echarts.init(el, null, { renderer: 'canvas' });
-    c.setOption({ textStyle: { fontFamily: 'IBM Plex Sans Thai, sans-serif' }, animation: false, grid: { left: 52, right: 18, top: 34, bottom: 44, containLabel: true }, tooltip: { trigger: 'axis', confine: true }, toolbox: { right: 4, feature: { saveAsImage: { title: 'บันทึกรูป', pixelRatio: 2 } } }, ...option });
+  c.setOption({ textStyle: { fontFamily: 'Noto Sans Thai, Sarabun, sans-serif', color: APP.C.ink }, animation: false, grid: { left: 52, right: 18, top: 34, bottom: 44, containLabel: true }, tooltip: { trigger: 'axis', confine: true }, toolbox: { right: 4, feature: { saveAsImage: { title: 'บันทึกรูป', pixelRatio: 2 } } }, ...option });
     APP.charts.push(c); return c;
   };
   window.addEventListener('resize', () => APP.charts.forEach((c) => c.resize()));

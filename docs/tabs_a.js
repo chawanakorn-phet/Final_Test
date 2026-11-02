@@ -59,9 +59,9 @@
         xAxis: [0, 1, 2].map((i) => ({ type: 'category', gridIndex: i, data: dates, axisLabel: { show: i === 2 } })),
         yAxis: [{ type: 'value', gridIndex: 0, name: 'คดี' }, { type: 'value', gridIndex: 1, name: 'ล้านบาท' }, { type: 'value', gridIndex: 2, name: '%', min: 0, max: 100 }],
         series: [
-          { name: 'คดี', type: 'line', xAxisIndex: 0, yAxisIndex: 0, data: plot.map((r) => r.use ? r.cases : null), color: C.fake, connectNulls: false, showSymbol: true },
-          { name: 'ความเสียหาย (ล้านบาท)', type: 'line', xAxisIndex: 1, yAxisIndex: 1, data: plot.map((r) => r.use ? r.loss / 1e6 : null), color: C.orange, connectNulls: false, showSymbol: true },
-          { name: 'สัดส่วนข่าวเท็จ (%)', type: 'line', xAxisIndex: 2, yAxisIndex: 2, data: plot.map((r) => r.vd ? (r.fake + r.dist) / r.vd * 100 : null), color: C.blue, connectNulls: false, showSymbol: true },
+          { name: 'คดี', type: 'line', xAxisIndex: 0, yAxisIndex: 0, data: plot.map((r) => r.use ? r.cases : null), color: C.scam, connectNulls: false, showSymbol: true },
+          { name: 'ความเสียหาย (ล้านบาท)', type: 'line', xAxisIndex: 1, yAxisIndex: 1, data: plot.map((r) => r.use ? r.loss / 1e6 : null), color: C.scam, connectNulls: false, showSymbol: true },
+          { name: 'สัดส่วนข่าวเท็จ (%)', type: 'line', xAxisIndex: 2, yAxisIndex: 2, data: plot.map((r) => r.vd ? (r.fake + r.dist) / r.vd * 100 : null), color: C.fake, connectNulls: false, showSymbol: true },
         ] });
     });
     return { html, after };
