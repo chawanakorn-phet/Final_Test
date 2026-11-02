@@ -15,11 +15,15 @@ DATE_COLS = {
     "aiid_top": ["date"],
     "aiid_growth": ["snapshot"],
     "eu_monthly": ["month_start"],
+    "eu_debunks": ["debunk_date"],
+    "afnc_clean": ["date", "week_start"],
+    "aiid_clean": ["date"],
 }
 TABLES = [
     "weekly", "acsc_types", "afnc_monthly", "afnc_agencies", "afnc_tags", "aiid_yearly", "aiid_risk",
     "aiid_thai", "aiid_top", "aiid_growth", "fotn", "eu_yearly", "eu_monthly", "eu_keywords",
     "eu_languages", "eu_domains", "validation", "cleaning_log", "afnc_scam_share", "theme_year", "covid_share", "aiid_country", "eu_debunks",
+    "afnc_clean", "aiid_clean",
 ]
 
 
