@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+
+# Secrets / local config
+.env
+
+# Raw datasets: large (afnc_items.csv is 68 MB) and several have no stated licence -> never commit.
+# Put them in data/raw/ or point FT_RAW_DIR at them.
+data/raw/*
+!data/raw/.gitkeep
+01_AI_Incident_Database/
+02_Freedom_on_the_Net/
+03_EUvsDisinfo/
+04_Thai_Disinformation_and_Scams/
+*.zip
+00_Data_Guide_TH.pdf
+
+# Logs
+logs/*
+!logs/.gitkeep
+
+# OS / editor / tooling
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.claude/

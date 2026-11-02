@@ -1,0 +1,11 @@
+﻿Incident ID,date,title,is_deepfake,is_scam,report_count,url
+375,2019-09-29,Thai Wallet App's Facial Recognition Errors Created Registration Issues for Government Programs,False,False,3,https://incidentdatabase.ai/cite/375
+415,2020-07-28,Facebook Provided Offensive Translation for King of Thailand's Birthday Ceremony,False,False,5,https://incidentdatabase.ai/cite/415
+902,2025-01-15,Prime Minister of Thailand Paetongtarn Shinawatra Claims AI Voice Scam Impersonated ASEAN Leader Requesting Money,True,True,6,https://incidentdatabase.ai/cite/902
+918,2025-02-04,AI-Aided Scam in Thailand Allegedly Impersonates Police to Defraud 163 Victims,True,True,1,https://incidentdatabase.ai/cite/918
+1254,2025-06-24,Purported AI Deepfake Reportedly Impersonated Thai PBS World Anchor and Miss Universe CEO in Fraudulent Investment Video,True,True,1,https://incidentdatabase.ai/cite/1254
+1127,2025-06-27,Purported AI-Generated Audio Clip Allegedly Portrays Cambodian Senate President Hun Sen Raising Money for Conflict with Thailand,True,False,1,https://incidentdatabase.ai/cite/1127
+1255,2025-08-28,Purported Deepfake Reportedly Circulated on Facebook Impersonating Thai PBS World Anchors and Business Figures to Solicit Investments,True,True,1,https://incidentdatabase.ai/cite/1255
+1435,2025-09-18,Purportedly AI-Edited Obscene Clip Reportedly Impersonated Thai Actor Khunnapat Pichetworawut in Paid Scam,True,True,2,https://incidentdatabase.ai/cite/1435
+1369,2026-02-07,Purportedly AI-Generated Image Reportedly Circulated Ahead of Thai Election Depicting PM Anutin Charnvirakul Dining with Benjamin Mauerberger,False,False,2,https://incidentdatabase.ai/cite/1369
+1669,2026-07-09,Threat Actor Reportedly Used Hermes AI Agent for Unattended Post-Compromise Activity in Thailand's Ministry of Finance Network,False,False,4,https://incidentdatabase.ai/cite/1669

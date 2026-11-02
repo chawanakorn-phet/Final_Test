@@ -1,0 +1,22 @@
+﻿risk_domain,intent,n
+"AI system safety, failures, and limitations",Intentional,18
+"AI system safety, failures, and limitations",Other,7
+"AI system safety, failures, and limitations",Unintentional,288
+Discrimination and Toxicity,Intentional,44
+Discrimination and Toxicity,Other,2
+Discrimination and Toxicity,Unintentional,197
+Human-Computer Interaction,Intentional,9
+Human-Computer Interaction,Unintentional,33
+Malicious Actors & Misuse,Intentional,538
+Malicious Actors & Misuse,Other,2
+Malicious Actors & Misuse,Unintentional,26
+Misinformation,Intentional,56
+Misinformation,Other,4
+Misinformation,Unintentional,136
+Privacy & Security,Intentional,53
+Privacy & Security,Other,4
+Privacy & Security,Unintentional,55
+Socioeconomic & Environmental Harms,Intentional,17
+Socioeconomic & Environmental Harms,Other,2
+Socioeconomic & Environmental Harms,Unintentional,5
+ยังไม่จัดหมวด,ยังไม่จัดหมวด,279
